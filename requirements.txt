@@ -3,3 +3,5 @@ numpy
 pygetwindow
 pyautogui
 pillow
+ultralytics
+openvino
