@@ -12,7 +12,7 @@ Bước 2: Chạy từng cell
 # ============================================
 !pip install unsloth
 !pip install datasets==4.3.0  # Fix lỗi recursion
-!pip install --upgrade transformers trl
+!pip install --upgrade transformers trl psutil
 
 # ============================================
 # CELL 2: LOAD MODEL (Theo docs Unsloth)
