@@ -150,8 +150,8 @@ print(formatted_data[0]["text"][:800])
 # ============================================
 # CELL 5: TRAINING
 # ============================================
-from trl import SFTTrainer
-from transformers import TrainingArguments
+import psutil
+from trl import SFTTrainer, SFTConfig
 
 trainer = SFTTrainer(
     model=model,
@@ -159,9 +159,8 @@ trainer = SFTTrainer(
     train_dataset=dataset,
     dataset_text_field="text",
     max_seq_length=max_seq_length,
-    dataset_num_proc=2,
     packing=False,
-    args=TrainingArguments(
+    args=SFTConfig(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
@@ -175,12 +174,10 @@ trainer = SFTTrainer(
         lr_scheduler_type="linear",
         seed=3407,
         output_dir="pvz_output",
+        dataset_num_proc=2,  # Move vào đây
     ),
 )
 
-print("✓ Bắt đầu training...")
-trainer.train()
-print("✓ Training xong!")
 
 # ============================================
 # CELL 6: TEST MODEL
