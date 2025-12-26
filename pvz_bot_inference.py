@@ -14,7 +14,7 @@ from transformers.utils import get_json_schema
 MODEL_PATH = "pvz_functiongemma_final"
 
 print("Loading model...")
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, torch_dtype=torch.float32)
+model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, dtype=torch.float32)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
 # Move to GPU if available
@@ -26,15 +26,25 @@ print(f"✓ Model loaded on {device}")
 # TOOLS DEFINITION
 # ============================================
 def collect_sun(x: int, y: int) -> str:
-    """Click to collect sun at pixel position."""
+    """
+    Click to collect sun at pixel position.
+    
+    Args:
+        x: X pixel coordinate
+        y: Y pixel coordinate
+    """
     return "Collected"
 
 def plant_pea_shooter() -> str:
-    """Plant a pea shooter at row 3."""
+    """
+    Plant a pea shooter at row 3.
+    """
     return "Planted"
 
 def do_nothing() -> str:
-    """Wait and do nothing."""
+    """
+    Wait and do nothing.
+    """
     return "Waiting"
 
 TOOLS = [get_json_schema(collect_sun), get_json_schema(plant_pea_shooter), get_json_schema(do_nothing)]
