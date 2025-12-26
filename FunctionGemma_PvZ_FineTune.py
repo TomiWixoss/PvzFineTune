@@ -24,11 +24,11 @@ import torch
 max_seq_length = 4096
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/functiongemma-270m-it",  # Dùng model từ Unsloth
+    model_name="unsloth/functiongemma-270m-it",  # FunctionGemma
     max_seq_length=max_seq_length,
     load_in_4bit=False,
     load_in_8bit=False,
-    load_in_16bit=True,  # 16bit LoRA
+    load_in_16bit=True,
     full_finetuning=False,
 )
 
@@ -161,7 +161,7 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        max_steps=500,
+        max_steps=2000,  # Tăng cho 100k samples
         learning_rate=5e-4,  # Tăng từ 2e-4
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),

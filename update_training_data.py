@@ -1,60 +1,50 @@
 # -*- coding: utf-8 -*-
 """
-Training data với format rõ ràng hơn - dùng HAS_SUN/NO_SUN prefix
+Tạo 100,000 samples training data
 """
 
 import json
+import random
 
+random.seed(42)
 data = []
 
-# ========== COLLECT_SUN (25 samples) ==========
-sun_positions = [
-    (200, 100), (300, 150), (400, 180), (500, 120), (600, 200),
-    (150, 90), (250, 130), (350, 160), (450, 140), (550, 170),
-    (180, 110), (280, 145), (380, 175), (480, 125), (580, 195),
-    (220, 105), (320, 155), (420, 185), (520, 115), (620, 205),
-    (190, 95), (290, 135), (390, 165), (490, 145), (590, 185),
-]
-for i, (x, y) in enumerate(sun_positions):
-    zombie = "HAS_ZOMBIE" if i % 3 == 0 else "NO_ZOMBIE"
-    can_plant = "CAN_PLANT" if i % 2 == 0 else "CANNOT_PLANT"
-    data.append({
-        "game_state": f"HAS_SUN x={x} y={y}. {zombie}. {can_plant}",
-        "action": "collect_sun",
-        "arguments": {"x": x, "y": y}
-    })
+# Tạo 100,000 samples cân bằng: ~33k mỗi action
+for i in range(100000):
+    action_type = i % 3  # 0, 1, 2 luân phiên
+    
+    if action_type == 0:
+        # COLLECT_SUN - có sun
+        x = random.randint(50, 700)
+        y = random.randint(50, 250)
+        zombie = random.choice(["HAS_ZOMBIE", "NO_ZOMBIE"])
+        can_plant = random.choice(["CAN_PLANT", "CANNOT_PLANT"])
+        data.append({
+            "game_state": f"HAS_SUN x={x} y={y}. {zombie}. {can_plant}",
+            "action": "collect_sun",
+            "arguments": {"x": x, "y": y}
+        })
+    
+    elif action_type == 1:
+        # PLANT_PEA_SHOOTER - không sun, có zombie, có thể plant
+        data.append({
+            "game_state": "NO_SUN. HAS_ZOMBIE. CAN_PLANT",
+            "action": "plant_pea_shooter",
+            "arguments": {}
+        })
+    
+    else:
+        # DO_NOTHING - không sun, không thể làm gì
+        zombie = random.choice(["HAS_ZOMBIE", "NO_ZOMBIE"])
+        can_plant = random.choice(["CANNOT_PLANT", "CAN_PLANT"]) if zombie == "NO_ZOMBIE" else "CANNOT_PLANT"
+        data.append({
+            "game_state": f"NO_SUN. {zombie}. {can_plant}",
+            "action": "do_nothing",
+            "arguments": {}
+        })
 
-# ========== PLANT_PEA_SHOOTER (25 samples) ==========
-for i in range(25):
-    data.append({
-        "game_state": "NO_SUN. HAS_ZOMBIE. CAN_PLANT",
-        "action": "plant_pea_shooter",
-        "arguments": {}
-    })
-
-# ========== DO_NOTHING (25 samples) ==========
-# Không sun, không thể plant
-for i in range(10):
-    data.append({
-        "game_state": "NO_SUN. NO_ZOMBIE. CANNOT_PLANT",
-        "action": "do_nothing",
-        "arguments": {}
-    })
-
-for i in range(10):
-    data.append({
-        "game_state": "NO_SUN. HAS_ZOMBIE. CANNOT_PLANT",
-        "action": "do_nothing",
-        "arguments": {}
-    })
-
-# Không sun, không zombie, có thể plant -> chờ
-for i in range(5):
-    data.append({
-        "game_state": "NO_SUN. NO_ZOMBIE. CAN_PLANT",
-        "action": "do_nothing",
-        "arguments": {}
-    })
+# Shuffle
+random.shuffle(data)
 
 # Thêm id
 for i, sample in enumerate(data):
@@ -62,12 +52,12 @@ for i, sample in enumerate(data):
 
 # Lưu
 with open("training_data.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
+    json.dump(data, f, ensure_ascii=False)
 
 # Thống kê
 from collections import Counter
 actions = Counter(s["action"] for s in data)
 print(f"✓ Đã tạo training_data.json")
-print(f"  Tổng: {len(data)} samples")
+print(f"  Tổng: {len(data):,} samples")
 for action, count in actions.items():
-    print(f"  - {action}: {count}")
+    print(f"  - {action}: {count:,}")
