@@ -8,11 +8,12 @@ Bước 2: Chạy từng cell
 """
 
 # ============================================
-# CELL 1: CÀI ĐẶT
+# CELL 1: CÀI ĐẶT (Restart runtime sau khi chạy cell này!)
 # ============================================
 !pip install unsloth
-!pip install datasets==4.3.0  # Fix lỗi recursion
-!pip install --upgrade transformers trl psutil
+!pip install datasets==4.3.0
+!pip install trl==0.24.0  # Version compatible với unsloth
+!pip install psutil
 
 # ============================================
 # CELL 2: LOAD MODEL (Theo docs Unsloth)
