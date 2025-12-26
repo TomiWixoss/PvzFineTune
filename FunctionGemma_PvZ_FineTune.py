@@ -7,8 +7,9 @@ Theo tài liệu chính thức của Google: https://ai.google.dev/gemma/docs/fu
 # ============================================
 # CELL 1: CÀI ĐẶT (Restart runtime sau cell này!)
 # ============================================
-# !pip install torch tensorboard
-# !pip install transformers datasets accelerate evaluate trl protobuf sentencepiece
+!pip install torch tensorboard
+!pip install transformers datasets accelerate evaluate trl protobuf sentencepiece
+# KHÔNG CÀI UNSLOTH - dùng transformers thuần
 
 # ============================================
 # CELL 2: LOGIN HUGGINGFACE
@@ -122,12 +123,12 @@ args = SFTConfig(
     num_train_epochs=10,
     per_device_train_batch_size=4,
     gradient_checkpointing=False,
-    optim="adamw_torch_fused",
+    optim="adamw_torch",
     logging_steps=10,
     eval_strategy="epoch",
     learning_rate=5e-5,
-    fp16=True if model.dtype == torch.float16 else False,
-    bf16=True if model.dtype == torch.bfloat16 else False,
+    fp16=False,  # Tắt mixed precision
+    bf16=False,
     lr_scheduler_type="constant",
     report_to="none",
 )
