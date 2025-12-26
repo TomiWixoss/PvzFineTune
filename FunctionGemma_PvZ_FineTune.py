@@ -103,16 +103,16 @@ print(f"✓ Đã load {len(raw_data)} samples")
 TOOL_SCHEMAS = [get_json_schema(f) for f in TOOLS]
 
 def format_sample(sample):
-    """Format theo chuẩn FunctionGemma chat template"""
+    """Format theo chuẩn FunctionGemma chat template - chỉ 1 action"""
     game_state = sample["game_state"]
     action = sample["action"]
     args = sample["arguments"]
     
-    # Tạo messages
+    # Tạo messages với 1 tool call duy nhất
     messages = [
         {
             "role": "user",
-            "content": f"Game state: {game_state}\nWhat action should I take?"
+            "content": f"Game state: {game_state}\nChoose ONE action."
         },
         {
             "role": "assistant",
@@ -161,7 +161,7 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        max_steps=120,
+        max_steps=200,
         learning_rate=2e-4,
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
@@ -200,7 +200,7 @@ def extract_tool_calls(text):
 FastLanguageModel.for_inference(model)
 
 def test_bot(game_state):
-    messages = [{"role": "user", "content": f"Game state: {game_state}\nWhat action should I take?"}]
+    messages = [{"role": "user", "content": f"Game state: {game_state}\nChoose ONE action."}]
     
     inputs = tokenizer.apply_chat_template(
         messages,
@@ -208,14 +208,14 @@ def test_bot(game_state):
         add_generation_prompt=True,
         return_dict=True,
         return_tensors="pt"
-    )
+    ).to(model.device)
     
     out = model.generate(
-        **inputs.to(model.device),
-        max_new_tokens=64,
-        top_p=0.95,
-        top_k=64,
-        temperature=1.0
+        **inputs,
+        max_new_tokens=50,
+        do_sample=False,  # Greedy decoding - deterministic
+        pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=tokenizer.convert_tokens_to_ids("<end_function_call>"),
     )
     
     output = tokenizer.decode(out[0][len(inputs["input_ids"][0]):], skip_special_tokens=False)
