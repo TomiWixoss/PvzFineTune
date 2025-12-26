@@ -1,257 +1,195 @@
 # -*- coding: utf-8 -*-
 """
 FunctionGemma Fine-tune cho PvZ Bot - Google Colab
-Theo tài liệu chính thức của Unsloth: https://docs.unsloth.ai/models
-
-Bước 1: Upload file training_data.json lên Colab
-Bước 2: Chạy từng cell
+Theo tài liệu chính thức của Google: https://ai.google.dev/gemma/docs/functiongemma/finetuning-with-functiongemma
 """
 
 # ============================================
-# CELL 1: CÀI ĐẶT (Restart runtime sau khi chạy cell này!)
+# CELL 1: CÀI ĐẶT (Restart runtime sau cell này!)
 # ============================================
-!pip install unsloth
-!pip install datasets==4.3.0
-!pip install trl==0.24.0  # Version compatible với unsloth
-!pip install psutil
+# !pip install torch tensorboard
+# !pip install transformers datasets accelerate evaluate trl protobuf sentencepiece
 
 # ============================================
-# CELL 2: LOAD MODEL (Theo docs Unsloth)
+# CELL 2: LOGIN HUGGINGFACE
 # ============================================
-from unsloth import FastLanguageModel
+from huggingface_hub import login
+login()
+
+# ============================================
+# CELL 3: LOAD MODEL
+# ============================================
 import torch
+import json
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers.utils import get_json_schema
 
-max_seq_length = 4096
+base_model = "google/functiongemma-270m-it"
 
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/functiongemma-270m-it",  # FunctionGemma
-    max_seq_length=max_seq_length,
-    load_in_4bit=False,
-    load_in_8bit=False,
-    load_in_16bit=True,
-    full_finetuning=False,
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    torch_dtype="auto",
+    device_map="auto",
+    attn_implementation="eager"
 )
+tokenizer = AutoTokenizer.from_pretrained(base_model)
 
-# Thêm LoRA - tăng capacity
-model = FastLanguageModel.get_peft_model(
-    model,
-    r=64,  # Tăng từ 16 lên 64
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
-    lora_alpha=64,  # Tăng theo r
-    lora_dropout=0,
-    bias="none",
-    use_gradient_checkpointing="unsloth",
-    random_state=3407,
-)
-
-print("✓ Đã load model FunctionGemma!")
+print(f"✓ Model loaded! Device: {model.device}, Dtype: {model.dtype}")
 
 # ============================================
-# CELL 3: ĐỊNH NGHĨA TOOLS CHO PVZ
+# CELL 4: ĐỊNH NGHĨA TOOLS
 # ============================================
-# Format theo chuẩn FunctionGemma
-def collect_sun(x: int, y: int):
+def collect_sun(x: int, y: int) -> str:
     """
     Click to collect sun at pixel position.
     
     Args:
-        x: X pixel coordinate of sun
-        y: Y pixel coordinate of sun
-    
-    Returns:
-        result: Success message
+        x: X pixel coordinate
+        y: Y pixel coordinate
     """
-    return {"result": f"Collected sun at ({x}, {y})"}
+    return "Collected"
 
-def plant_pea_shooter():
+def plant_pea_shooter() -> str:
     """
-    Plant a pea shooter at row 3 (the only row in level 1).
-    
-    Returns:
-        result: Success message
+    Plant a pea shooter at row 3 (level 1 only has 1 row).
     """
-    return {"result": "Planted pea shooter at row 3"}
+    return "Planted"
 
-def do_nothing():
+def do_nothing() -> str:
     """
     Wait and do nothing this turn.
-    
-    Returns:
-        result: Wait message
     """
-    return {"result": "Waiting..."}
+    return "Waiting"
 
-TOOLS = [collect_sun, plant_pea_shooter, do_nothing]
-
-print("✓ Đã định nghĩa tools!")
+TOOLS = [get_json_schema(collect_sun), get_json_schema(plant_pea_shooter), get_json_schema(do_nothing)]
+print("✓ Tools defined!")
+print(json.dumps(TOOLS, indent=2))
 
 # ============================================
-# CELL 4: LOAD VÀ FORMAT TRAINING DATA
+# CELL 5: LOAD VÀ FORMAT DATA
 # ============================================
-import json
 from datasets import Dataset
-from transformers.utils import get_json_schema
 
-# Load data
-with open("training_data.json", "r", encoding="utf-8") as f:
+with open("training_data.json", "r") as f:
     raw_data = json.load(f)
 
-print(f"✓ Đã load {len(raw_data)} samples")
+print(f"✓ Loaded {len(raw_data)} samples")
 
-# Tạo tool schemas
-TOOL_SCHEMAS = [get_json_schema(f) for f in TOOLS]
+DEFAULT_SYSTEM_MSG = "You are a PvZ game bot. Choose ONE action based on game state."
 
-def format_sample(sample):
-    """Format theo chuẩn FunctionGemma chat template - chỉ 1 action"""
-    game_state = sample["game_state"]
+def create_conversation(sample):
     action = sample["action"]
     args = sample["arguments"]
     
-    # Tạo messages với 1 tool call duy nhất
-    messages = [
-        {
-            "role": "user",
-            "content": f"Game state: {game_state}\nChoose ONE action."
-        },
-        {
-            "role": "assistant",
-            "tool_calls": [{
-                "type": "function",
-                "function": {
-                    "name": action,
-                    "arguments": args
-                }
-            }]
-        }
-    ]
+    # Build tool_calls
+    if action == "collect_sun":
+        tool_call = {"type": "function", "function": {"name": "collect_sun", "arguments": {"x": args["x"], "y": args["y"]}}}
+    elif action == "plant_pea_shooter":
+        tool_call = {"type": "function", "function": {"name": "plant_pea_shooter", "arguments": {}}}
+    else:
+        tool_call = {"type": "function", "function": {"name": "do_nothing", "arguments": {}}}
     
-    # Apply chat template với tools
-    text = tokenizer.apply_chat_template(
-        messages,
-        tools=TOOL_SCHEMAS,
-        tokenize=False,
-        add_generation_prompt=False
-    )
-    
-    return {"text": text}
+    return {
+        "messages": [
+            {"role": "developer", "content": DEFAULT_SYSTEM_MSG},
+            {"role": "user", "content": sample["game_state"]},
+            {"role": "assistant", "tool_calls": [tool_call]},
+        ],
+        "tools": TOOLS
+    }
 
-# Format tất cả samples
-formatted_data = [format_sample(s) for s in raw_data]
-dataset = Dataset.from_list(formatted_data)
+dataset = Dataset.from_list(raw_data)
+dataset = dataset.map(create_conversation, remove_columns=dataset.features, batched=False)
+dataset = dataset.train_test_split(test_size=0.2, shuffle=True)
 
-print(f"✓ Đã format {len(dataset)} samples")
-print("\n--- Sample ---")
-print(formatted_data[0]["text"][:800])
+print(f"✓ Train: {len(dataset['train'])}, Test: {len(dataset['test'])}")
+
+# Debug: xem format
+print("\n--- SAMPLE FORMAT ---")
+sample = dataset["train"][0]
+formatted = tokenizer.apply_chat_template(sample["messages"], tools=sample["tools"], tokenize=False)
+print(formatted[:1000])
 
 # ============================================
-# CELL 5: TRAINING
+# CELL 6: TRAINING
 # ============================================
-import psutil
 from trl import SFTTrainer, SFTConfig
+
+args = SFTConfig(
+    output_dir="pvz_functiongemma",
+    max_length=512,
+    packing=False,
+    num_train_epochs=10,
+    per_device_train_batch_size=4,
+    gradient_checkpointing=False,
+    optim="adamw_torch_fused",
+    logging_steps=10,
+    eval_strategy="epoch",
+    learning_rate=5e-5,
+    fp16=True if model.dtype == torch.float16 else False,
+    bf16=True if model.dtype == torch.bfloat16 else False,
+    lr_scheduler_type="constant",
+    report_to="none",
+)
 
 trainer = SFTTrainer(
     model=model,
-    tokenizer=tokenizer,
-    train_dataset=dataset,
-    dataset_text_field="text",
-    max_seq_length=max_seq_length,
-    packing=False,
-    args=SFTConfig(
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=4,
-        warmup_steps=5,
-        max_steps=2000,  # Tăng cho 100k samples
-        learning_rate=5e-4,  # Tăng từ 2e-4
-        fp16=not torch.cuda.is_bf16_supported(),
-        bf16=torch.cuda.is_bf16_supported(),
-        logging_steps=1,
-        optim="adamw_8bit",
-        weight_decay=0.01,
-        lr_scheduler_type="linear",
-        seed=3407,
-        output_dir="pvz_output",
-        dataset_num_proc=2,  # Move vào đây
-    ),
+    args=args,
+    train_dataset=dataset['train'],
+    eval_dataset=dataset['test'],
+    processing_class=tokenizer,
 )
 
+print("✓ Starting training...")
+trainer.train()
+print("✓ Training done!")
 
 # ============================================
-# CELL 6: TEST MODEL
+# CELL 7: TEST
 # ============================================
-import re
-
-def extract_tool_calls(text):
-    """Parse function calls từ output của FunctionGemma"""
-    def cast(v):
-        try: return int(v)
-        except:
-            try: return float(v)
-            except: return v.strip("'\"")
-
-    return [{
-        "name": name,
-        "arguments": {
-            k: cast((v1 or v2).strip())
-            for k, v1, v2 in re.findall(r"(\w+):(?:<escape>(.*?)<escape>|([^,}]*))", args)
-        }
-    } for name, args in re.findall(r"<start_function_call>call:(\w+)\{(.*?)\}<end_function_call>", text, re.DOTALL)]
-
-FastLanguageModel.for_inference(model)
-
 def test_bot(game_state):
-    messages = [{"role": "user", "content": f"Game state: {game_state}\nChoose ONE action."}]
+    messages = [
+        {"role": "developer", "content": DEFAULT_SYSTEM_MSG},
+        {"role": "user", "content": game_state},
+    ]
     
     inputs = tokenizer.apply_chat_template(
-        messages,
-        tools=TOOL_SCHEMAS,
-        add_generation_prompt=True,
-        return_dict=True,
+        messages, 
+        tools=TOOLS, 
+        add_generation_prompt=True, 
+        return_dict=True, 
         return_tensors="pt"
-    ).to(model.device)
-    
-    out = model.generate(
-        **inputs,
-        max_new_tokens=50,
-        do_sample=False,  # Greedy decoding - deterministic
-        pad_token_id=tokenizer.eos_token_id,
-        eos_token_id=tokenizer.convert_tokens_to_ids("<end_function_call>"),
     )
     
+    out = model.generate(
+        **inputs.to(model.device), 
+        pad_token_id=tokenizer.eos_token_id, 
+        max_new_tokens=64
+    )
     output = tokenizer.decode(out[0][len(inputs["input_ids"][0]):], skip_special_tokens=False)
-    tool_calls = extract_tool_calls(output)
-    
-    return output, tool_calls
+    return output
 
-# Test
 print("\n" + "="*50)
 print("TEST PVZ BOT")
 print("="*50)
 
 test_cases = [
     "HAS_SUN x=300 y=150. NO_ZOMBIE. CAN_PLANT",
-    "NO_SUN. HAS_ZOMBIE. CAN_PLANT", 
+    "NO_SUN. HAS_ZOMBIE. CAN_PLANT",
     "NO_SUN. NO_ZOMBIE. CANNOT_PLANT",
     "HAS_SUN x=450 y=200. HAS_ZOMBIE. CAN_PLANT",
     "NO_SUN. HAS_ZOMBIE. CANNOT_PLANT",
     "NO_SUN. NO_ZOMBIE. CAN_PLANT",
 ]
 
-for test in test_cases:
-    print(f"\n📥 Input: {test}")
-    output, calls = test_bot(test)
-    print(f"📤 Raw: {output[:100]}...")
-    print(f"🎯 Parsed: {calls}")
+for t in test_cases:
+    print(f"\n📥 Input: {t}")
+    print(f"📤 Output: {test_bot(t)}")
 
 # ============================================
-# CELL 7: SAVE MODEL
+# CELL 8: SAVE
 # ============================================
-model.save_pretrained("pvz_functiongemma_lora")
-tokenizer.save_pretrained("pvz_functiongemma_lora")
-
-# Zip để download
-!zip -r pvz_functiongemma_lora.zip pvz_functiongemma_lora/
-
-print("\n✓ Đã lưu model!")
-print("📥 Download file: pvz_functiongemma_lora.zip")
-print("\nSau khi download, giải nén và dùng với pvz_bot.py")
+model.save_pretrained("pvz_functiongemma_final")
+tokenizer.save_pretrained("pvz_functiongemma_final")
+!zip -r pvz_functiongemma_final.zip pvz_functiongemma_final/
+print("\n✓ Saved! Download pvz_functiongemma_final.zip")
