@@ -29,7 +29,7 @@ base_model = "google/functiongemma-270m-it"
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
-    torch_dtype="auto",
+    torch_dtype=torch.float32,  # Force float32
     device_map="auto",
     attn_implementation="eager"
 )
