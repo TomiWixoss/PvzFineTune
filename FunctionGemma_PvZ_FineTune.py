@@ -32,13 +32,13 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     full_finetuning=False,
 )
 
-# Thêm LoRA
+# Thêm LoRA - tăng capacity
 model = FastLanguageModel.get_peft_model(
     model,
-    r=16,
+    r=64,  # Tăng từ 16 lên 64
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                     "gate_proj", "up_proj", "down_proj"],
-    lora_alpha=16,
+    lora_alpha=64,  # Tăng theo r
     lora_dropout=0,
     bias="none",
     use_gradient_checkpointing="unsloth",
@@ -161,8 +161,8 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        max_steps=300,
-        learning_rate=2e-4,
+        max_steps=500,
+        learning_rate=5e-4,  # Tăng từ 2e-4
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
         logging_steps=1,
@@ -229,12 +229,12 @@ print("TEST PVZ BOT")
 print("="*50)
 
 test_cases = [
-    "Sun at (300, 150). No zombie. Can plant: True",
-    "No sun. Zombie row [3]. Can plant: True", 
-    "No sun. No zombie. Can plant: False",
-    "Sun at (450, 200). Zombie row [3]. Can plant: True",
-    "No sun. Zombie row [3]. Can plant: False",
-    "No sun. No zombie. Can plant: True",
+    "HAS_SUN x=300 y=150. NO_ZOMBIE. CAN_PLANT",
+    "NO_SUN. HAS_ZOMBIE. CAN_PLANT", 
+    "NO_SUN. NO_ZOMBIE. CANNOT_PLANT",
+    "HAS_SUN x=450 y=200. HAS_ZOMBIE. CAN_PLANT",
+    "NO_SUN. HAS_ZOMBIE. CANNOT_PLANT",
+    "NO_SUN. NO_ZOMBIE. CAN_PLANT",
 ]
 
 for test in test_cases:
