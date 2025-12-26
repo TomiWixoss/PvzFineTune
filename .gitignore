@@ -1,0 +1,37 @@
+# Model files (quá lớn)
+pvz_functiongemma_final/
+pvz_lora/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual env
+venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Training outputs
+pvz_output/
+output/
+*.pt
+*.bin
+*.safetensors
+
+# Logs
+*.log
+tensorboard/

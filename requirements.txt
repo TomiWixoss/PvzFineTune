@@ -1,3 +1,4 @@
+# Detection & Capture
 opencv-python
 numpy
 pygetwindow
@@ -5,3 +6,9 @@ pyautogui
 pillow
 ultralytics
 openvino
+
+# FunctionGemma Inference
+torch
+transformers
+sentencepiece
+protobuf
