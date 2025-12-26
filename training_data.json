@@ -117,9 +117,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 35,
@@ -186,9 +184,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 35,
@@ -220,9 +216,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 16,
@@ -275,9 +269,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -292,9 +284,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 47,
@@ -332,9 +322,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -349,9 +337,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 54,
@@ -389,9 +375,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 39,
@@ -471,9 +455,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 31,
@@ -497,9 +479,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 33,
@@ -529,9 +509,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 35,
@@ -563,9 +541,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -580,9 +556,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 56,
@@ -637,9 +611,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -654,9 +626,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -671,9 +641,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 43,
@@ -703,9 +671,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 62,
@@ -720,9 +686,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 46,
@@ -775,9 +739,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 59,
@@ -995,9 +957,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 61,
@@ -1027,9 +987,7 @@
     ],
     "can_plant": true,
     "action": "plant_pea_shooter",
-    "arguments": {
-      "row": 3
-    }
+    "arguments": {}
   },
   {
     "id": 63,
@@ -1045,5 +1003,200 @@
     "can_plant": false,
     "action": "do_nothing",
     "arguments": {}
+  },
+  {
+    "game_state": "Sun at (200, 100). No zombie. Can plant: True",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 200,
+      "y": 100
+    },
+    "id": 64,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "Sun at (350, 180). No zombie. Can plant: False",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 350,
+      "y": 180
+    },
+    "id": 65,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "Sun at (500, 120). No zombie. Can plant: True",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 500,
+      "y": 120
+    },
+    "id": 66,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "Sun at (150, 90). No zombie. Can plant: False",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 150,
+      "y": 90
+    },
+    "id": 67,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "Sun at (600, 200). No zombie. Can plant: True",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 600,
+      "y": 200
+    },
+    "id": 68,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "Sun at (250, 130). Zombie row [3]. Can plant: True",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 250,
+      "y": 130
+    },
+    "id": 69,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "Sun at (400, 160). Zombie row [3]. Can plant: False",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 400,
+      "y": 160
+    },
+    "id": 70,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "Sun at (550, 140). Zombie row [3]. Can plant: True",
+    "action": "collect_sun",
+    "arguments": {
+      "x": 550,
+      "y": 140
+    },
+    "id": 71,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. Zombie row [3]. Can plant: True",
+    "action": "plant_pea_shooter",
+    "arguments": {},
+    "id": 72,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. Zombie row [3]. Can plant: True",
+    "action": "plant_pea_shooter",
+    "arguments": {},
+    "id": 73,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. Zombie row [3]. Can plant: True",
+    "action": "plant_pea_shooter",
+    "arguments": {},
+    "id": 74,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: False",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 75,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "No sun. Zombie row [3]. Can plant: False",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 76,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: False",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 77,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "No sun. Zombie row [3]. Can plant: False",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 78,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: False",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 79,
+    "suns": [],
+    "zombies": [],
+    "can_plant": false
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: True",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 80,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: True",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 81,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
+  },
+  {
+    "game_state": "No sun. No zombie. Can plant: True",
+    "action": "do_nothing",
+    "arguments": {},
+    "id": 82,
+    "suns": [],
+    "zombies": [],
+    "can_plant": true
   }
 ]

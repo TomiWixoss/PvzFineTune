@@ -64,17 +64,14 @@ def collect_sun(x: int, y: int):
     """
     return {"result": f"Collected sun at ({x}, {y})"}
 
-def plant_pea_shooter(row: int):
+def plant_pea_shooter():
     """
-    Plant a pea shooter at specified row.
-    
-    Args:
-        row: Row number (1-5) to plant pea shooter
+    Plant a pea shooter at row 3 (the only row in level 1).
     
     Returns:
         result: Success message
     """
-    return {"result": f"Planted pea shooter at row {row}"}
+    return {"result": "Planted pea shooter at row 3"}
 
 def do_nothing():
     """
@@ -164,7 +161,7 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        max_steps=60,
+        max_steps=120,
         learning_rate=2e-4,
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
@@ -233,9 +230,11 @@ print("="*50)
 
 test_cases = [
     "Sun at (300, 150). No zombie. Can plant: True",
-    "No sun. Zombie row [2]. Can plant: True", 
+    "No sun. Zombie row [3]. Can plant: True", 
     "No sun. No zombie. Can plant: False",
     "Sun at (450, 200). Zombie row [3]. Can plant: True",
+    "No sun. Zombie row [3]. Can plant: False",
+    "No sun. No zombie. Can plant: True",
 ]
 
 for test in test_cases:
