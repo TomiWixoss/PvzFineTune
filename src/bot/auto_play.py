@@ -7,10 +7,11 @@ PvZ Auto Play - Hybrid Mode
 
 import cv2
 import time
-import os
 import sys
+import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add parent to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.window_capture import PvZWindowCapture
 from inference.yolo_detector import YOLODetector
 from inference.gemma_inference import GemmaInference
