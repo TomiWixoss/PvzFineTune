@@ -8,15 +8,15 @@ import time
 import sys
 import os
 
-# Add parent to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import YOLO_MODEL_PATH
 from utils.window_capture import PvZWindowCapture
 from inference.yolo_detector import YOLODetector
 
 
 class PvZRealtimeDetection:
-    def __init__(self, model_path="models/yolo/pvz_openvino/best.xml"):
-        self.detector = YOLODetector(model_path)
+    def __init__(self, model_path: str = None):
+        self.detector = YOLODetector(model_path or YOLO_MODEL_PATH)
         self.window_capture = PvZWindowCapture()
     
     def start(self):
@@ -75,7 +75,12 @@ class PvZRealtimeDetection:
 
 
 def main():
-    detector = PvZRealtimeDetection(model_path="models/yolo/pvz_openvino/best.xml")
+    import argparse
+    parser = argparse.ArgumentParser(description='PvZ Realtime Detection')
+    parser.add_argument('-m', '--model', help='YOLO model path')
+    args = parser.parse_args()
+    
+    detector = PvZRealtimeDetection(model_path=args.model)
     detector.start()
 
 

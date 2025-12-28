@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-PvZ Auto Play - Hybrid Mode
-- Rule-based: Collect sun (fast)
-- AI: Plant decisions
+PvZ Auto Play Bot
+- Rule-based: Collect sun (instant)
+- AI: Plant decisions (optional)
 """
 
 import cv2
@@ -10,8 +10,12 @@ import time
 import sys
 import os
 
-# Add parent to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import (
+    YOLO_MODEL_PATH, GEMMA_MODEL_PATH,
+    GRID_ROW_Y, GRID_COLUMNS_X,
+    SUN_COLLECT_COOLDOWN, PLANT_COOLDOWN, TARGET_FPS
+)
 from utils.window_capture import PvZWindowCapture
 from inference.yolo_detector import YOLODetector
 from inference.gemma_inference import GemmaInference
@@ -19,10 +23,6 @@ from inference.gemma_inference import GemmaInference
 
 class PvZController:
     """Game controller for clicking and tracking"""
-    
-    # Level 1 grid config
-    ROW_Y = 355
-    COLUMNS_X = [75, 154, 229, 312, 393, 476, 557, 638, 732]
     
     def __init__(self, window_capture: PvZWindowCapture):
         self.window = window_capture
@@ -48,16 +48,14 @@ class PvZController:
     
     def plant_at_empty_slot(self, seed_pos: tuple, existing_plants: list) -> bool:
         """Plant at first empty slot"""
-        # Click seed packet
         self.window.click(seed_pos[0], seed_pos[1])
         time.sleep(0.15)
         
-        # Find empty column
-        for col_x in self.COLUMNS_X:
+        for col_x in GRID_COLUMNS_X:
             is_occupied = any(abs(p["x"] - col_x) < 40 for p in existing_plants)
             if not is_occupied:
-                print(f"  → Planting at ({col_x}, {self.ROW_Y})")
-                self.window.click(col_x, self.ROW_Y)
+                print(f"  → Planting at ({col_x}, {GRID_ROW_Y})")
+                self.window.click(col_x, GRID_ROW_Y)
                 return True
         
         print("  → All columns occupied!")
@@ -67,12 +65,10 @@ class PvZController:
 class PvZAutoPlay:
     """Main auto-play bot"""
     
-    def __init__(self, 
-                 yolo_path="models/yolo/pvz_openvino/best.xml",
-                 gemma_path="models/gemma/pvz_functiongemma_final"):
+    def __init__(self, yolo_path: str = None, gemma_path: str = None):
         self.window_capture = PvZWindowCapture()
-        self.detector = YOLODetector(yolo_path)
-        self.ai = GemmaInference(gemma_path)
+        self.detector = YOLODetector(yolo_path or YOLO_MODEL_PATH)
+        self.ai = GemmaInference(gemma_path or GEMMA_MODEL_PATH)
         self.controller = None
         
         self.last_sun_collect = 0
@@ -80,20 +76,20 @@ class PvZAutoPlay:
     
     def run(self):
         print("=" * 50)
-        print("PVZ AUTO PLAY - HYBRID MODE")
-        print("  Sun: Rule-based (instant)")
-        print("  Plant: AI decision")
+        print("PVZ AUTO PLAY BOT")
         print("=" * 50)
         
-        # Load models
+        # Load YOLO model
         if not self.detector.load():
             return
+        
+        # Load AI model (optional)
         if not self.ai.load():
-            print("Warning: AI model not loaded, using rule-based only")
+            print("⚠ AI model not loaded, using rule-based only")
         
         # Find game window
         if not self.window_capture.find_window():
-            print("Open PvZ first!")
+            print("\n✗ Open PvZ game first!")
             return
         
         self.controller = PvZController(self.window_capture)
@@ -101,8 +97,7 @@ class PvZAutoPlay:
         print("\n✓ Running! Press 'q' to quit\n")
         
         fps_counter, fps_time, fps = 0, time.time(), 0
-        target_fps = 30
-        frame_time = 1.0 / target_fps
+        frame_time = 1.0 / TARGET_FPS
         
         try:
             while True:
@@ -117,34 +112,40 @@ class PvZAutoPlay:
                 suns = det.get("sun", [])
                 zombies = det.get("zombie", [])
                 plants = det.get("pea_shooter", [])
-                seed_yes = det.get("pea_shooter_pack_yes", [])
+                seed_ready = det.get("pea_shooter_ready", [])
                 
                 now = time.time()
                 
-                # === RULE-BASED: Collect sun immediately ===
-                if suns and now - self.last_sun_collect > 0.1:
+                # === Collect sun ===
+                if suns and now - self.last_sun_collect > SUN_COLLECT_COOLDOWN:
                     sun = suns[0]
                     if self.controller.collect_sun(sun["x"], sun["y"]):
                         self.last_sun_collect = now
                         print(f"[SUN] Collected at ({sun['x']}, {sun['y']})")
                 
-                # === AI: Plant decision ===
-                can_plant = len(seed_yes) > 0
+                # === Plant decision ===
+                can_plant = len(seed_ready) > 0
                 has_zombie = len(zombies) > 0
                 
-                if can_plant and now - self.last_plant_time > 1.5:
+                if can_plant and now - self.last_plant_time > PLANT_COOLDOWN:
                     should_plant = True
                     if self.ai.model is not None:
                         should_plant = self.ai.should_plant(has_zombie, can_plant)
                     
                     if should_plant:
-                        seed_pos = (seed_yes[0]["x"], seed_yes[0]["y"])
+                        seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
                         self.controller.plant_at_empty_slot(seed_pos, plants)
                         self.last_plant_time = now
                 
-                # Draw
-                self._draw_frame(frame, suns, zombies, plants, seed_yes, fps, can_plant)
+                # === Click continue button if visible ===
+                buttons = det.get("button_continue", [])
+                if buttons:
+                    btn = buttons[0]
+                    self.window.click(btn["x"], btn["y"])
+                    print("[BUTTON] Clicked continue")
                 
+                # Draw & display
+                self._draw_frame(frame, det, fps)
                 cv2.imshow("PvZ Auto", frame)
                 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -164,35 +165,41 @@ class PvZAutoPlay:
         finally:
             cv2.destroyAllWindows()
     
-    def _draw_frame(self, frame, suns, zombies, plants, seed_yes, fps, can_plant):
+    def _draw_frame(self, frame, det, fps):
         """Draw detections on frame"""
-        for sun in suns:
-            cv2.circle(frame, (sun["x"], sun["y"]), 15, (0, 255, 255), 2)
-            cv2.putText(frame, "SUN", (sun["x"]-15, sun["y"]-20), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
+        colors = {
+            "sun": (0, 255, 255),
+            "zombie": (0, 0, 255),
+            "pea_shooter": (0, 255, 0),
+            "pea_shooter_ready": (0, 255, 0),
+        }
         
-        for z in zombies:
-            cv2.circle(frame, (z["x"], z["y"]), 15, (0, 0, 255), 2)
-            cv2.putText(frame, "ZOMBIE", (z["x"]-25, z["y"]-20), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        for class_name, items in det.items():
+            color = colors.get(class_name, (255, 255, 255))
+            for item in items:
+                cv2.circle(frame, (item["x"], item["y"]), 15, color, 2)
+                cv2.putText(frame, class_name.split("_")[0].upper(), 
+                           (item["x"]-20, item["y"]-20),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
         
-        for p in plants:
-            cv2.circle(frame, (p["x"], p["y"]), 10, (0, 255, 0), 2)
+        # Status bar
+        suns = len(det.get("sun", []))
+        zombies = len(det.get("zombie", []))
+        plants = len(det.get("pea_shooter", []))
+        ready = len(det.get("pea_shooter_ready", []))
         
-        for s in seed_yes:
-            cv2.rectangle(frame, (s["x"]-20, s["y"]-20), (s["x"]+20, s["y"]+20), (0, 255, 0), 2)
-            cv2.putText(frame, "READY", (s["x"]-20, s["y"]-25), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 2)
-        
-        status = f"FPS:{fps} | Suns:{len(suns)} | Zombies:{len(zombies)} | Plants:{len(plants)} | CanPlant:{can_plant}"
+        status = f"FPS:{fps} | Sun:{suns} | Zombie:{zombies} | Plant:{plants} | Ready:{ready}"
         cv2.putText(frame, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
 
 def main():
-    bot = PvZAutoPlay(
-        yolo_path="models/yolo/pvz_openvino/best.xml",
-        gemma_path="models/gemma/pvz_functiongemma_final"
-    )
+    import argparse
+    parser = argparse.ArgumentParser(description='PvZ Auto Play Bot')
+    parser.add_argument('-m', '--model', help='YOLO model path')
+    parser.add_argument('-g', '--gemma', help='Gemma model path')
+    args = parser.parse_args()
+    
+    bot = PvZAutoPlay(yolo_path=args.model, gemma_path=args.gemma)
     bot.run()
 
 

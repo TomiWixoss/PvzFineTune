@@ -3,27 +3,43 @@
 FunctionGemma inference for PvZ bot decisions
 """
 
-import torch
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from transformers.utils import get_json_schema
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import GEMMA_MODEL_PATH
+
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    from transformers.utils import get_json_schema
+    HAS_TRANSFORMERS = True
+except ImportError:
+    HAS_TRANSFORMERS = False
 
 
 class GemmaInference:
     """FunctionGemma model for game action decisions"""
     
-    def __init__(self, model_path="models/gemma/pvz_functiongemma_final"):
-        self.model_path = model_path
+    def __init__(self, model_path: str = None):
+        self.model_path = model_path or GEMMA_MODEL_PATH
         self.model = None
         self.tokenizer = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = None
         self.tools = None
         self.system_msg = "You are a PvZ game bot. Choose ONE action based on game state."
     
     def load(self) -> bool:
         """Load FunctionGemma model"""
+        if not HAS_TRANSFORMERS:
+            print("✗ transformers not installed. Run: pip install torch transformers")
+            return False
+        
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        
         try:
-            print(f"Loading FunctionGemma from: {self.model_path}")
+            print(f"Loading FunctionGemma: {self.model_path}")
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path, 
                 torch_dtype=torch.float32
