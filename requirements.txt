@@ -3,7 +3,10 @@ opencv-python
 numpy
 pillow
 
-# Window capture
+# YouTube download
+yt-dlp
+
+# Window capture (for bot only)
 pygetwindow
 pyautogui
 

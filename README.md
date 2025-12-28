@@ -8,10 +8,10 @@ AI bot cho Plants vs Zombies sử dụng YOLOv11 (object detection) và Function
 pvz-ai-bot/
 ├── src/
 │   ├── bot/              # Auto-play bot
-│   │   └── auto_play.py  # Main bot (hybrid: rule-based + AI)
-│   ├── data/             # Data collection & labeling
-│   │   ├── capture_screenshots.py
-│   │   ├── collect_training_data.py
+│   │   └── auto_play.py
+│   ├── data/             # Data collection
+│   │   ├── youtube_downloader.py
+│   │   ├── video_to_frames.py
 │   │   └── auto_label.py
 │   ├── inference/        # Model inference
 │   │   ├── yolo_detector.py
@@ -20,16 +20,14 @@ pvz-ai-bot/
 │   ├── training/         # Training scripts (Colab)
 │   │   ├── yolo_finetune.py
 │   │   └── gemma_finetune.py
-│   └── utils/            # Utilities
-│       ├── window_capture.py
+│   └── utils/
 │       └── get_positions.py
 ├── data/
-│   ├── raw/              # Raw screenshots
+│   ├── raw/              # Videos & frames
 │   └── processed/        # Training data JSON
 ├── models/
 │   ├── yolo/             # YOLO OpenVINO model
 │   └── gemma/            # FunctionGemma model
-├── notebooks/            # Colab notebooks
 └── requirements.txt
 ```
 
@@ -41,15 +39,26 @@ pip install -r requirements.txt
 
 ## Sử dụng
 
-### 1. Thu thập Dataset
+### 1. Thu thập Dataset từ YouTube
 
 ```bash
-# Chụp screenshots tự động
-python -m src.data.capture_screenshots
+# Tải video YouTube (full)
+python -m src.data.youtube_downloader "https://youtube.com/watch?v=VIDEO_ID"
 
-# Thu thập training data với YOLO detection
-python -m src.data.collect_training_data
+# Tải video với thời lượng cụ thể (từ 1:00 đến 5:30)
+python -m src.data.youtube_downloader "URL" -s 1:00 -e 5:30 -n pvz_gameplay
+
+# Tách frames từ video (1 FPS)
+python -m src.data.video_to_frames data/raw/videos/pvz_gameplay.mp4
+
+# Tách frames với FPS khác
+python -m src.data.video_to_frames data/raw/videos/pvz_gameplay.mp4 -f 2
+
+# Tách frames từ tất cả videos trong thư mục
+python -m src.data.video_to_frames data/raw/videos --batch
 ```
+
+Sau khi tách frames, dùng [LabelImg](https://github.com/HumanSignal/labelImg), [Roboflow](https://roboflow.com/), hoặc [CVAT](https://www.cvat.ai/) để gán nhãn.
 
 ### 2. Training (Google Colab)
 
