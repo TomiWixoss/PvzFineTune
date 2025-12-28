@@ -17,14 +17,8 @@ build/
 *.swp
 *.swo
 
-# Data & Models (large files)
+# Data (large files)
 data/raw/
-models/yolo/pvz_openvino/
-models/gemma/pvz_functiongemma_final/
-*.pt
-*.onnx
-*.bin
-*.xml
 
 # Keep structure
 !data/.gitkeep
@@ -38,3 +32,6 @@ runs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Game folder
+game/

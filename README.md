@@ -29,8 +29,8 @@ pvz-ai-bot/
 │       ├── videos/            # Video gameplay
 │       └── frames/            # Frames đã tách
 ├── models/
-│   ├── yolo/pvz_openvino/     # YOLO model (best.xml, best.bin)
-│   └── gemma/pvz_functiongemma_final/  # Gemma model
+│   ├── yolo/                  # YOLO model (best.xml, best.bin)
+│   └── gemma/                 # Gemma model
 └── requirements.txt
 ```
 
@@ -65,18 +65,14 @@ python -m src.data.video_to_frames data/raw/videos --batch
 
 Upload frames lên [Roboflow](https://roboflow.com/) và gán nhãn với các class:
 
-| Class                  | Mô tả                       |
-| ---------------------- | --------------------------- |
-| `sun`                  | Mặt trời                    |
-| `zombie`               | Zombie                      |
-| `pea_shooter`          | Cây bắn đậu đã trồng        |
-| `pea_shooter_ready`    | Gói hạt sáng (dùng được)    |
-| `pea_shooter_cooldown` | Gói hạt tối (đang cooldown) |
-| `sunflower`            | Cây hướng dương đã trồng    |
-| `sunflower_ready`      | Gói sunflower sáng          |
-| `sunflower_cooldown`   | Gói sunflower tối           |
-| `button_continue`      | Nút tiếp tục                |
-| `button_start`         | Nút bắt đầu                 |
+| Class                  | Mô tả                        |
+| ---------------------- | ---------------------------- |
+| `sun`                  | Mặt trời                     |
+| `zombie`               | Zombie                       |
+| `pea_shooter`          | Cây bắn đậu đã trồng         |
+| `pea_shooter_ready`    | Gói hạt sáng (dùng được)     |
+| `pea_shooter_cooldown` | Gói hạt tối (đang cooldown)  |
+| `sunflower_reward`     | Gói sunflower thưởng qua màn |
 
 ### 3. Training
 

@@ -113,6 +113,7 @@ class PvZAutoPlay:
                 zombies = det.get("zombie", [])
                 plants = det.get("pea_shooter", [])
                 seed_ready = det.get("pea_shooter_ready", [])
+                sunflower_reward = det.get("sunflower_reward", [])
                 
                 now = time.time()
                 
@@ -137,12 +138,11 @@ class PvZAutoPlay:
                         self.controller.plant_at_empty_slot(seed_pos, plants)
                         self.last_plant_time = now
                 
-                # === Click continue button if visible ===
-                buttons = det.get("button_continue", [])
-                if buttons:
-                    btn = buttons[0]
-                    self.window.click(btn["x"], btn["y"])
-                    print("[BUTTON] Clicked continue")
+                # === Click sunflower reward if visible ===
+                if sunflower_reward:
+                    reward = sunflower_reward[0]
+                    self.window_capture.click(reward["x"], reward["y"])
+                    print("[REWARD] Clicked sunflower reward")
                 
                 # Draw & display
                 self._draw_frame(frame, det, fps)
