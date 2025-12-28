@@ -7,7 +7,7 @@ Shared configuration for PvZ AI Bot
 # MODEL PATHS
 # ===========================================
 YOLO_MODEL_PATH = "models/yolo/best.xml"
-GEMMA_MODEL_PATH = "models/gemma/pvz_functiongemma_final"
+GEMMA_MODEL_PATH = "models/gemma"
 
 # ===========================================
 # YOLO CLASS NAMES (from trained model)

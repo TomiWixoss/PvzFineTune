@@ -42,9 +42,13 @@ class GemmaInference:
             print(f"Loading FunctionGemma: {self.model_path}")
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path, 
-                torch_dtype=torch.float32
+                torch_dtype=torch.float32,
+                local_files_only=True
             )
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+                local_files_only=True
+            )
             self.model = self.model.to(self.device)
             self._setup_tools()
             print(f"✓ Model loaded on {self.device}")
@@ -56,11 +60,23 @@ class GemmaInference:
     def _setup_tools(self):
         """Define available tools/actions"""
         def collect_sun(x: int, y: int) -> str:
-            """Click to collect sun at pixel position."""
+            """
+            Click to collect sun at pixel position.
+            
+            Args:
+                x: X coordinate of sun position in pixels
+                y: Y coordinate of sun position in pixels
+            """
             return "Collected"
 
         def plant_pea_shooter(row: int, col: int) -> str:
-            """Plant a pea shooter at grid position. Row 0-4 (top to bottom), Col 0-8 (left to right)."""
+            """
+            Plant a pea shooter at grid position.
+            
+            Args:
+                row: Row index 0-4 (0=top, 4=bottom)
+                col: Column index 0-8 (0=left, 8=right)
+            """
             return "Planted"
 
         def do_nothing() -> str:
