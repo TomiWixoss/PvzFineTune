@@ -36,3 +36,6 @@ Thumbs.db
 # Game folder
 game/
 tool/
+
+models/gemma/model.safetensors
+models/gemma/tokenizer*
