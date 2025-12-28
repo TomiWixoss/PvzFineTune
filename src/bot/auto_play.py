@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-PvZ Auto Play Bot
-- Rule-based: Collect sun (instant)
-- AI: Plant decisions (optional)
+PvZ Auto Play Bot - AI-driven (no rule-based logic)
+All decisions made by FunctionGemma
 """
 
 import cv2
@@ -13,8 +12,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     YOLO_MODEL_PATH, GEMMA_MODEL_PATH,
-    GRID_ROW_Y, GRID_COLUMNS_X,
-    SUN_COLLECT_COOLDOWN, PLANT_COOLDOWN, TARGET_FPS
+    GRID_ROWS_Y, GRID_COLUMNS_X,
+    AI_INFERENCE_DELAY, SUN_FALL_DELAY, PLANT_COOLDOWN, TARGET_FPS
 )
 from utils.window_capture import PvZWindowCapture
 from inference.yolo_detector import YOLODetector
@@ -22,48 +21,36 @@ from inference.gemma_inference import GemmaInference
 
 
 class PvZController:
-    """Game controller for clicking and tracking"""
+    """Game controller for clicking"""
     
     def __init__(self, window_capture: PvZWindowCapture):
         self.window = window_capture
-        self.collected_suns = []  # [(x, y, time), ...]
     
-    def is_sun_collected(self, x: int, y: int) -> bool:
-        """Check if sun was recently clicked"""
-        now = time.time()
-        self.collected_suns = [(sx, sy, t) for sx, sy, t in self.collected_suns if now - t < 1.5]
-        
-        for sx, sy, t in self.collected_suns:
-            if abs(sx - x) < 60 and abs(sy - y) < 60:
-                return True
-        return False
-    
-    def collect_sun(self, x: int, y: int) -> bool:
-        """Collect sun with tracking"""
-        if self.is_sun_collected(x, y):
-            return False
+    def collect_sun(self, x: int, y: int, pos_type: str = ""):
+        """Collect sun at pixel position"""
         self.window.click(x, y)
-        self.collected_suns.append((x, y, time.time()))
-        return True
+        print(f"[AI] Collect sun at ({x}, {y}) [{pos_type}]")
     
-    def plant_at_empty_slot(self, seed_pos: tuple, existing_plants: list) -> bool:
-        """Plant at first empty slot"""
+    def plant_at_grid(self, seed_pos: tuple, row: int, col: int):
+        """Plant at grid position (row, col)"""
+        if row < 0 or row >= len(GRID_ROWS_Y) or col < 0 or col >= len(GRID_COLUMNS_X):
+            print(f"[AI] Invalid grid position: row={row}, col={col}")
+            return False
+        
+        # Click seed packet
         self.window.click(seed_pos[0], seed_pos[1])
         time.sleep(0.15)
         
-        for col_x in GRID_COLUMNS_X:
-            is_occupied = any(abs(p["x"] - col_x) < 40 for p in existing_plants)
-            if not is_occupied:
-                print(f"  → Planting at ({col_x}, {GRID_ROW_Y})")
-                self.window.click(col_x, GRID_ROW_Y)
-                return True
-        
-        print("  → All columns occupied!")
-        return False
+        # Click grid position
+        x = GRID_COLUMNS_X[col]
+        y = GRID_ROWS_Y[row]
+        self.window.click(x, y)
+        print(f"[AI] Plant at row={row}, col={col} ({x}, {y})")
+        return True
 
 
 class PvZAutoPlay:
-    """Main auto-play bot"""
+    """Main auto-play bot - AI driven"""
     
     def __init__(self, yolo_path: str = None, gemma_path: str = None):
         self.window_capture = PvZWindowCapture()
@@ -71,21 +58,22 @@ class PvZAutoPlay:
         self.ai = GemmaInference(gemma_path or GEMMA_MODEL_PATH)
         self.controller = None
         
-        self.last_sun_collect = 0
+        self.last_action_time = 0
         self.last_plant_time = 0
     
     def run(self):
         print("=" * 50)
-        print("PVZ AUTO PLAY BOT")
+        print("PVZ AUTO PLAY BOT - AI MODE")
         print("=" * 50)
         
         # Load YOLO model
         if not self.detector.load():
             return
         
-        # Load AI model (optional)
+        # Load AI model (required)
         if not self.ai.load():
-            print("⚠ AI model not loaded, using rule-based only")
+            print("✗ AI model required! Cannot run without Gemma.")
+            return
         
         # Find game window
         if not self.window_capture.find_window():
@@ -95,6 +83,9 @@ class PvZAutoPlay:
         self.controller = PvZController(self.window_capture)
         
         print("\n✓ Running! Press 'q' to quit\n")
+        print(f"  AI Inference Delay: {AI_INFERENCE_DELAY}s")
+        print(f"  Sun Fall Delay: {SUN_FALL_DELAY}s")
+        print()
         
         fps_counter, fps_time, fps = 0, time.time(), 0
         frame_time = 1.0 / TARGET_FPS
@@ -117,26 +108,48 @@ class PvZAutoPlay:
                 
                 now = time.time()
                 
-                # === Collect sun ===
-                if suns and now - self.last_sun_collect > SUN_COLLECT_COOLDOWN:
-                    sun = suns[0]
-                    if self.controller.collect_sun(sun["x"], sun["y"]):
-                        self.last_sun_collect = now
-                        print(f"[SUN] Collected at ({sun['x']}, {sun['y']})")
-                
-                # === Plant decision ===
-                can_plant = len(seed_ready) > 0
-                has_zombie = len(zombies) > 0
-                
-                if can_plant and now - self.last_plant_time > PLANT_COOLDOWN:
-                    should_plant = True
-                    if self.ai.model is not None:
-                        should_plant = self.ai.should_plant(has_zombie, can_plant)
+                # === AI Decision (with delay for inference time) ===
+                if now - self.last_action_time > AI_INFERENCE_DELAY:
+                    game_state = GemmaInference.create_game_state(
+                        suns=suns,
+                        zombies=zombies,
+                        plants=plants,
+                        can_plant=len(seed_ready) > 0
+                    )
                     
-                    if should_plant:
-                        seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
-                        self.controller.plant_at_empty_slot(seed_pos, plants)
-                        self.last_plant_time = now
+                    action, args = self.ai.get_action(game_state)
+                    
+                    if action == "collect_sun" and suns:
+                        # Click vị trí gốc (lúc detect)
+                        x_orig = args.get("x", suns[0]["x"])
+                        y_orig = args.get("y", suns[0]["y"])
+                        self.controller.collect_sun(x_orig, y_orig, "original")
+                        
+                        # Wait for sun to fall
+                        time.sleep(SUN_FALL_DELAY)
+                        
+                        # Click vị trí sau delay (sun đã rơi)
+                        # Re-detect để lấy vị trí mới
+                        frame_new = self.window_capture.capture()
+                        if frame_new is not None:
+                            det_new = self.detector.detect_grouped(frame_new)
+                            suns_new = det_new.get("sun", [])
+                            if suns_new:
+                                self.controller.collect_sun(suns_new[0]["x"], suns_new[0]["y"], "delayed")
+                        
+                        self.last_action_time = now
+                    
+                    elif action == "plant_pea_shooter" and seed_ready:
+                        if now - self.last_plant_time > PLANT_COOLDOWN:
+                            row = args.get("row", 0)
+                            col = args.get("col", 0)
+                            seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
+                            self.controller.plant_at_grid(seed_pos, row, col)
+                            self.last_plant_time = now
+                            self.last_action_time = now
+                    
+                    elif action == "do_nothing":
+                        pass  # AI chose to wait
                 
                 # === Click sunflower reward if visible ===
                 if sunflower_reward:
@@ -194,7 +207,7 @@ class PvZAutoPlay:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='PvZ Auto Play Bot')
+    parser = argparse.ArgumentParser(description='PvZ Auto Play Bot - AI Mode')
     parser.add_argument('-m', '--model', help='YOLO model path')
     parser.add_argument('-g', '--gemma', help='Gemma model path')
     args = parser.parse_args()

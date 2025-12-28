@@ -59,8 +59,8 @@ class GemmaInference:
             """Click to collect sun at pixel position."""
             return "Collected"
 
-        def plant_pea_shooter() -> str:
-            """Plant a pea shooter."""
+        def plant_pea_shooter(row: int, col: int) -> str:
+            """Plant a pea shooter at grid position. Row 0-4 (top to bottom), Col 0-8 (left to right)."""
             return "Planted"
 
         def do_nothing() -> str:
@@ -132,18 +132,41 @@ class GemmaInference:
         return action == "plant_pea_shooter"
     
     @staticmethod
-    def create_game_state(suns: list, has_zombie: bool, can_plant: bool) -> str:
+    def create_game_state(suns: list, zombies: list, plants: list, can_plant: bool) -> str:
         """Create game state string from detection results"""
+        # Sun info
         if suns and len(suns) > 0:
             x, y = suns[0] if isinstance(suns[0], tuple) else (suns[0]["x"], suns[0]["y"])
             sun_str = f"HAS_SUN x={x} y={y}"
         else:
             sun_str = "NO_SUN"
         
-        zombie_str = "HAS_ZOMBIE" if has_zombie else "NO_ZOMBIE"
+        # Zombie info with row
+        if zombies and len(zombies) > 0:
+            # Find which row zombie is in
+            zombie = zombies[0] if isinstance(zombies[0], dict) else {"x": zombies[0][0], "y": zombies[0][1]}
+            zombie_row = GemmaInference._get_row_from_y(zombie["y"])
+            zombie_str = f"HAS_ZOMBIE row={zombie_row}"
+        else:
+            zombie_str = "NO_ZOMBIE"
+        
+        # Plant count per row
         plant_str = "CAN_PLANT" if can_plant else "CANNOT_PLANT"
         
         return f"{sun_str}. {zombie_str}. {plant_str}"
+    
+    @staticmethod
+    def _get_row_from_y(y: int) -> int:
+        """Get row index from y coordinate"""
+        from config import GRID_ROWS_Y
+        min_dist = float('inf')
+        closest_row = 0
+        for i, row_y in enumerate(GRID_ROWS_Y):
+            dist = abs(y - row_y)
+            if dist < min_dist:
+                min_dist = dist
+                closest_row = i
+        return closest_row
 
 
 def main():

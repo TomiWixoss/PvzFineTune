@@ -34,10 +34,10 @@ CLASS_COLORS = {
 }
 
 # ===========================================
-# GAME GRID CONFIG (Level 1)
+# GAME GRID CONFIG (5 rows x 9 cols)
 # ===========================================
-GRID_ROW_Y = 355
-GRID_COLUMNS_X = [75, 154, 229, 312, 393, 476, 557, 638, 732]
+GRID_ROWS_Y = [161, 258, 359, 447, 553]  # Row 0-4 (top to bottom)
+GRID_COLUMNS_X = [76, 152, 229, 316, 398, 477, 558, 633, 709]  # Col 0-8 (left to right)
 
 # ===========================================
 # DETECTION CONFIG
@@ -49,6 +49,7 @@ INPUT_SIZE = (640, 640)
 # ===========================================
 # BOT CONFIG
 # ===========================================
-SUN_COLLECT_COOLDOWN = 0.1  # seconds
+AI_INFERENCE_DELAY = 0.3  # seconds - time for AI to process
+SUN_FALL_DELAY = 0.5  # seconds - wait for sun to land before collecting
 PLANT_COOLDOWN = 1.5  # seconds
 TARGET_FPS = 30
