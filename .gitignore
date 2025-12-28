@@ -1,37 +1,40 @@
-# Model files (quá lớn)
-pvz_functiongemma_final/
-pvz_lora/
-*.zip
-
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
 *.egg-info/
-.eggs/
 dist/
 build/
-*.egg
-
-# Virtual env
-venv/
-.env/
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
+*.swo
+
+# Data & Models (large files)
+data/raw/
+models/yolo/pvz_openvino/
+models/gemma/pvz_functiongemma_final/
+*.pt
+*.onnx
+*.bin
+*.xml
+
+# Keep structure
+!data/.gitkeep
+!models/.gitkeep
+!notebooks/.gitkeep
+
+# Logs
+*.log
+runs/
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Training outputs
-pvz_output/
-output/
-*.pt
-*.bin
-*.safetensors
-
-# Logs
-*.log
-tensorboard/

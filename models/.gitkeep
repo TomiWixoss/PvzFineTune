@@ -1,0 +1,3 @@
+# Models directory
+# - yolo/pvz_openvino/: YOLO OpenVINO model (best.xml, best.bin)
+# - gemma/pvz_functiongemma_final/: FunctionGemma fine-tuned model

@@ -1,9 +1,13 @@
-# Detection & Capture
+# Core
 opencv-python
 numpy
+pillow
+
+# Window capture
 pygetwindow
 pyautogui
-pillow
+
+# YOLO Detection
 ultralytics
 openvino
 
@@ -12,3 +16,6 @@ torch
 transformers
 sentencepiece
 protobuf
+
+# Utilities
+keyboard

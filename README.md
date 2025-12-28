@@ -1,6 +1,37 @@
-# PvZ AI Vision Tools - YOLOv11
+# PvZ AI Bot
 
-Bộ công cụ AI cho Plants vs Zombies: Thu thập dataset và nhận diện realtime với YOLOv11.
+AI bot cho Plants vs Zombies sử dụng YOLOv11 (object detection) và FunctionGemma (decision making).
+
+## Cấu trúc thư mục
+
+```
+pvz-ai-bot/
+├── src/
+│   ├── bot/              # Auto-play bot
+│   │   └── auto_play.py  # Main bot (hybrid: rule-based + AI)
+│   ├── data/             # Data collection & labeling
+│   │   ├── capture_screenshots.py
+│   │   ├── collect_training_data.py
+│   │   └── auto_label.py
+│   ├── inference/        # Model inference
+│   │   ├── yolo_detector.py
+│   │   ├── gemma_inference.py
+│   │   └── realtime_detection.py
+│   ├── training/         # Training scripts (Colab)
+│   │   ├── yolo_finetune.py
+│   │   └── gemma_finetune.py
+│   └── utils/            # Utilities
+│       ├── window_capture.py
+│       └── get_positions.py
+├── data/
+│   ├── raw/              # Raw screenshots
+│   └── processed/        # Training data JSON
+├── models/
+│   ├── yolo/             # YOLO OpenVINO model
+│   └── gemma/            # FunctionGemma model
+├── notebooks/            # Colab notebooks
+└── requirements.txt
+```
 
 ## Cài đặt
 
@@ -8,57 +39,54 @@ Bộ công cụ AI cho Plants vs Zombies: Thu thập dataset và nhận diện r
 pip install -r requirements.txt
 ```
 
-## 1. Thu thập Dataset (capture_pvz.py)
+## Sử dụng
 
-Tool tự động chụp màn hình game để chuẩn bị dataset.
-
-### Cách sử dụng:
-
-1. Mở game Plants vs Zombies
-2. Chạy script:
+### 1. Thu thập Dataset
 
 ```bash
-python capture_pvz.py
+# Chụp screenshots tự động
+python -m src.data.capture_screenshots
+
+# Thu thập training data với YOLO detection
+python -m src.data.collect_training_data
 ```
 
-3. Chơi màn 1 bình thường, script sẽ tự động chụp màn hình mỗi 0.5 giây
-4. Nhấn `Ctrl+C` để dừng khi đã chụp đủ
+### 2. Training (Google Colab)
 
-### Cấu hình:
+Upload các file trong `src/training/` lên Colab và chạy với GPU.
 
-- `OUTPUT_DIR`: Thư mục lưu ảnh (mặc định: "pvz_dataset")
-- `CAPTURE_INTERVAL`: Khoảng thời gian giữa các lần chụp (mặc định: 0.5 giây)
-
-### Gán nhãn:
-
-Sau khi chụp xong, dùng các tool như [LabelImg](https://github.com/HumanSignal/labelImg), [Roboflow](https://roboflow.com/), hoặc [CVAT](https://www.cvat.ai/) để gán nhãn.
-
-## 2. Nhận diện Realtime (pvz_realtime_detection.py)
-
-Tool chạy model YOLO đã train để nhận diện realtime trên game.
-
-### Cách sử dụng:
-
-1. Đảm bảo đã có model đã train (thư mục `pvz_openvino` hoặc file `.pt`)
-2. Mở game Plants vs Zombies
-3. Chạy script:
+### 3. Realtime Detection
 
 ```bash
-python pvz_realtime_detection.py
+python -m src.inference.realtime_detection
 ```
 
-4. Nhấn phím `q` trên cửa sổ hiển thị để thoát
+### 4. Auto Play Bot
 
-### Các class được nhận diện:
+```bash
+python -m src.bot.auto_play
+```
 
-- `pea_shooter` - Cây bắn đậu (màu xanh lá)
-- `pea_shooter_pack_no` - Gói hạt giống chưa sẵn sàng (màu cam)
-- `pea_shooter_pack_yes` - Gói hạt giống sẵn sàng (màu vàng)
-- `sun` - Mặt trời (màu cyan)
-- `zombie` - Zombie (màu đỏ)
+## Classes được nhận diện
 
-### Cấu hình:
+| Class                | Mô tả                         | Màu     |
+| -------------------- | ----------------------------- | ------- |
+| pea_shooter          | Cây bắn đậu                   | Xanh lá |
+| pea_shooter_pack_no  | Gói hạt giống (chưa sẵn sàng) | Cam     |
+| pea_shooter_pack_yes | Gói hạt giống (sẵn sàng)      | Vàng    |
+| sun                  | Mặt trời                      | Cyan    |
+| zombie               | Zombie                        | Đỏ      |
 
-Trong file `pvz_realtime_detection.py`, thay đổi:
+## Cấu hình
 
-- `MODEL_PATH`: Đường dẫn đến model (mặc định: "pvz_openvino")
+Đường dẫn model mặc định:
+
+- YOLO: `models/yolo/pvz_openvino/best.xml`
+- Gemma: `models/gemma/pvz_functiongemma_final/`
+
+## Utilities
+
+```bash
+# Lấy tọa độ trong game
+python -m src.utils.get_positions
+```

@@ -1,0 +1,3 @@
+# Data directory
+# - raw/: Raw screenshots for labeling
+# - processed/: Processed training data (JSON)
