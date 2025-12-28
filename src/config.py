@@ -36,8 +36,18 @@ CLASS_COLORS = {
 # ===========================================
 # GAME GRID CONFIG (5 rows x 9 cols)
 # ===========================================
-GRID_ROWS_Y = [161, 258, 359, 447, 553]  # Row 0-4 (top to bottom)
-GRID_COLUMNS_X = [76, 152, 229, 316, 398, 477, 558, 633, 709]  # Col 0-8 (left to right)
+# For 800x600 resolution (windowed)
+GRID_ROWS_Y_800 = [161, 258, 359, 447, 553]
+GRID_COLUMNS_X_800 = [76, 152, 229, 316, 398, 477, 558, 633, 709]
+
+# For 1920x1080 resolution (fullscreen/video)
+# Calibrated from actual video: zombie y=547-716 should be row=2 (middle)
+GRID_ROWS_Y_1080 = [380, 480, 580, 680, 780]  # Row 0-4 (top to bottom)
+GRID_COLUMNS_X_1080 = [182, 365, 550, 758, 955, 1145, 1339, 1519, 1702]  # Col 0-8
+
+# Default (use 800x600 for game window, 1080 for video)
+GRID_ROWS_Y = GRID_ROWS_Y_800
+GRID_COLUMNS_X = GRID_COLUMNS_X_800
 
 # ===========================================
 # DETECTION CONFIG

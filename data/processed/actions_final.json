@@ -1,0 +1,113 @@
+[
+  {
+    "time": "0:05",
+    "action": "do_nothing",
+    "args": {},
+    "note": "game starting, no sun yet"
+  },
+  {
+    "time": "0:09.0",
+    "action": "plant_pea_shooter",
+    "args": { "row": 2, "col": 0 },
+    "note": "first seed ready, 150 sun"
+  },
+  {
+    "time": "0:12.2",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun fully visible"
+  },
+  {
+    "time": "0:15.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "seed in cooldown"
+  },
+  {
+    "time": "0:17.5",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun visible"
+  },
+  {
+    "time": "0:22.0",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun visible"
+  },
+  {
+    "time": "0:25.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "no sun, seed cooldown"
+  },
+  {
+    "time": "0:27.8",
+    "action": "collect_sun",
+    "args": {},
+    "note": "falling sun visible"
+  },
+  { "time": "0:31.0", "action": "do_nothing", "args": {}, "note": "waiting" },
+  {
+    "time": "0:34.8",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun appears clearly"
+  },
+  {
+    "time": "0:38.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "no sun, seed cooldown"
+  },
+  {
+    "time": "0:40.5",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun visible"
+  },
+  {
+    "time": "0:41.9",
+    "action": "plant_pea_shooter",
+    "args": { "row": 2, "col": 2 },
+    "note": "seed packet bright, 100 sun"
+  },
+  {
+    "time": "0:45.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "seed cooldown"
+  },
+  {
+    "time": "0:46.8",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun is clearly visible"
+  },
+  { "time": "0:50.0", "action": "do_nothing", "args": {}, "note": "waiting" },
+  {
+    "time": "0:53.5",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun visible"
+  },
+  {
+    "time": "0:55.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "insufficient sun to plant"
+  },
+  { "time": "0:57.0", "action": "do_nothing", "args": {}, "note": "defending" },
+  {
+    "time": "0:58.2",
+    "action": "collect_sun",
+    "args": {},
+    "note": "sun becomes visible"
+  },
+  {
+    "time": "1:00.0",
+    "action": "do_nothing",
+    "args": {},
+    "note": "level ending"
+  }
+]

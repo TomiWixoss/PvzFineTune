@@ -65,7 +65,11 @@ from typing import Optional, List, Dict, Any, Tuple
 import argparse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import YOLO_MODEL_PATH, DEFAULT_CONFIDENCE, GRID_ROWS_Y, GRID_COLUMNS_X
+from config import (
+    YOLO_MODEL_PATH, DEFAULT_CONFIDENCE,
+    GRID_ROWS_Y_800, GRID_COLUMNS_X_800,
+    GRID_ROWS_Y_1080, GRID_COLUMNS_X_1080
+)
 
 
 class VideoDatasetBuilder:
@@ -92,6 +96,10 @@ class VideoDatasetBuilder:
         self.width = 0
         self.height = 0
         self.duration = 0.0
+        
+        # Grid config (auto-detect based on resolution)
+        self.grid_rows_y = GRID_ROWS_Y_800
+        self.grid_cols_x = GRID_COLUMNS_X_800
         
         # Output
         self.samples: List[Dict] = []
@@ -121,6 +129,16 @@ class VideoDatasetBuilder:
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.duration = self.total_frames / self.fps if self.fps > 0 else 0
+        
+        # Auto-detect grid based on resolution
+        if self.height >= 1080:
+            self.grid_rows_y = GRID_ROWS_Y_1080
+            self.grid_cols_x = GRID_COLUMNS_X_1080
+            print(f"  Grid: 1080p mode")
+        else:
+            self.grid_rows_y = GRID_ROWS_Y_800
+            self.grid_cols_x = GRID_COLUMNS_X_800
+            print(f"  Grid: 800x600 mode")
         
         print(f"✓ Video: {self.video_path.name}")
         print(f"  {self.width}x{self.height} | {self.fps:.1f} FPS | {self.total_frames} frames")
@@ -244,7 +262,7 @@ class VideoDatasetBuilder:
         """Y coordinate → row index (0-4)"""
         min_dist = float('inf')
         row = 0
-        for i, row_y in enumerate(GRID_ROWS_Y):
+        for i, row_y in enumerate(self.grid_rows_y):
             dist = abs(y - row_y)
             if dist < min_dist:
                 min_dist = dist
@@ -255,7 +273,7 @@ class VideoDatasetBuilder:
         """X coordinate → col index (0-8)"""
         min_dist = float('inf')
         col = 0
-        for i, col_x in enumerate(GRID_COLUMNS_X):
+        for i, col_x in enumerate(self.grid_cols_x):
             dist = abs(x - col_x)
             if dist < min_dist:
                 min_dist = dist
