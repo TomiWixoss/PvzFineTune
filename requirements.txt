@@ -22,7 +22,7 @@ protobuf
 yt-dlp
 
 # AI Video Labeling (Gemini)
-google-generativeai
+google-genai
 python-dotenv
 
 # Training (Colab - optional)
