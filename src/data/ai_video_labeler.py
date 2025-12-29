@@ -180,6 +180,10 @@ class AIVideoLabeler:
                 print(f"❌ JSON parse error: {e}")
                 print(f"   Raw: {full_text[:200]}...")
                 return []
+            
+            except KeyboardInterrupt:
+                print("\n⚠️ Interrupted by user")
+                return []
                 
             except Exception as e:
                 print(f"⚠️ Error: {e}")
@@ -224,6 +228,43 @@ class AIVideoLabeler:
                     valid_actions.append(actions[idx])
         
         return valid_actions
+    
+    def _get_game_states_for_errors(self, video_path: str, actions: list, validation: dict) -> str:
+        """
+        Thu thập game_state tại các timestamp có lỗi
+        Returns: string mô tả game_state cho AI
+        """
+        try:
+            from .video_dataset_builder import VideoDatasetBuilder
+            
+            # Lấy danh sách samples có lỗi
+            validated_samples = validation.get("validated_samples", [])
+            error_samples = [s for s in validated_samples if not s.get("valid", True)]
+            
+            if not error_samples:
+                return "Không có thông tin game_state"
+            
+            lines = []
+            for sample in error_samples[:10]:  # Max 10 errors
+                idx = sample.get("id", 0)
+                timestamp = sample.get("timestamp", "?")
+                game_state = sample.get("game_state", {})
+                error = sample.get("error", "")
+                action = sample.get("action", {})
+                
+                state_text = game_state.get("text", "N/A")
+                
+                lines.append(f"""
+### Action [{idx}] tại {timestamp}:
+- **Lỗi**: {error}
+- **Action**: {action.get('type')} - {action.get('args')}
+- **Game State**: {state_text}
+""")
+            
+            return "\n".join(lines)
+            
+        except Exception as e:
+            return f"Không thể lấy game_state: {e}"
     
     def process_video(
         self,
@@ -335,7 +376,10 @@ class AIVideoLabeler:
                 print("❌ Hết key, dừng.")
                 break
             
-            # Build correction prompt
+            # Thu thập game_state cho các lỗi
+            game_states_info = self._get_game_states_for_errors(video_path, actions, validation)
+            
+            # Build correction prompt với game_state
             error_feedback = "\n".join(unfixable[:20])
             prompt = f"""
 Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
@@ -343,15 +387,21 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 ## LỖI CẦN SỬA:
 {error_feedback}
 
+## TRẠNG THÁI GAME TẠI CÁC TIMESTAMP LỖI:
+{game_states_info}
+
 ## YÊU CẦU:
 1. Xem lại video (bạn đã xem ở lượt trước)
-2. Sửa các lỗi:
+2. Dựa vào game_state ở trên để hiểu:
+   - PLANTS: cây đã trồng ở đâu (không được trồng chồng)
+   - SEEDS: seed packet nào ready/cooldown
+3. Sửa các lỗi:
    - Không trồng chồng lên ô đã có cây
    - row trong range 0-4, col trong range 0-8
    - CHỈ plant khi seed packet READY (không cooldown)
    - Timestamp phải chính xác khi cây THỰC SỰ được đặt xuống
-3. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
-4. Trả về JSON array đã sửa
+4. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
+5. Trả về JSON array đã sửa
 """
             # Reset blocked keys for retry
             self.key_manager.reset_blocked()

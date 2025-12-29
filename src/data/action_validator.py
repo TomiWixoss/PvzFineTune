@@ -120,6 +120,26 @@ def validate_actions_with_video(
                             if not seed_ready and seeds:
                                 # Có seeds nhưng không ready
                                 action_error = f"[{i}] time={time_str}: Seed {plant_type} đang {seed_status}, không thể trồng"
+                            
+                            # Check cây có thực sự xuất hiện tại vị trí đó không
+                            # Check frame sau 0.5s để chắc chắn cây đã được đặt
+                            if action_error is None:
+                                check_time = seconds + 0.5
+                                check_frame, _, _ = builder.get_frame_at_time(str(check_time))
+                                if check_frame is not None:
+                                    future_state = builder.detect_game_state(check_frame)
+                                    plants_in_frame = future_state.get("plants", [])
+                                else:
+                                    plants_in_frame = game_state.get("plants", [])
+                                
+                                plant_found = False
+                                for p in plants_in_frame:
+                                    if p.get("row") == row and p.get("col") == col:
+                                        plant_found = True
+                                        break
+                                
+                                if not plant_found:
+                                    action_error = f"[{i}] time={time_str}: YOLO không thấy cây tại ({row},{col}) sau 0.5s - AI có thể ghi thừa action"
                         
                         # Nếu OK, update grid
                         if action_error is None:
