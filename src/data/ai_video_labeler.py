@@ -21,6 +21,7 @@ from .action_validator import (
     validate_actions_simple,
     format_validation_result
 )
+from .action_auto_fixer import ActionAutoFixer
 
 # ===========================================
 # CONFIG
@@ -234,15 +235,16 @@ class AIVideoLabeler:
         1. Load video
         2. Call AI (chat) -> get actions
         3. Save raw immediately
-        4. Validate với video + YOLO
-        5. Nếu chưa pass > 90%, gửi errors về AI và lặp lại
-        6. Lặp vô hạn tới khi pass hoặc hết key
-        7. Cuối cùng lưu bản sạch (chỉ actions không error)
+        4. TỰ FIX: Quét ±2s tìm timestamp seed ready
+        5. Validate với video + YOLO
+        6. Nếu còn lỗi không fix được → gửi errors về AI
+        7. Lặp vô hạn tới khi pass hoặc hết key
+        8. Cuối cùng lưu bản sạch (chỉ actions không error)
         """
         print(f"\n{'='*50}")
         print(f"🎬 Processing: {video_path}")
         print(f"   Model: {MODEL_NAME} | Thinking: HIGH")
-        print(f"   Mode: Loop until pass > 90% or no keys left")
+        print(f"   Mode: Auto-fix + Loop until pass > 90%")
         print(f"{'='*50}\n")
         
         # Reset chat history cho video mới
@@ -256,6 +258,9 @@ class AIVideoLabeler:
         
         # Load video once
         video_bytes, mime_type = self._load_video(video_path)
+        
+        # Init auto fixer
+        auto_fixer = ActionAutoFixer(video_path)
         
         # Initial call (lượt đầu, gửi video)
         actions = self._call_ai_chat(
@@ -280,7 +285,18 @@ class AIVideoLabeler:
             iteration += 1
             print(f"\n--- Iteration {iteration} ---")
             
-            # Validate với video + YOLO
+            # BƯỚC 1: Tự fix trước
+            print("🔧 Auto-fixing timestamps...")
+            fix_result = auto_fixer.fix_actions(actions)
+            
+            if fix_result["fix_count"] > 0:
+                print(f"   ✅ Fixed {fix_result['fix_count']} actions")
+                actions = fix_result["fixed_actions"]
+                # Save fixed version
+                fixed_path = output_dir / f"fixed_iter_{iteration}.json"
+                self._save_json(actions, str(fixed_path))
+            
+            # BƯỚC 2: Validate
             try:
                 validation = validate_actions_with_video(actions, video_path)
                 print("   (Validated with video + YOLO)")
@@ -295,13 +311,23 @@ class AIVideoLabeler:
                 print("✅ PASSED!")
                 break
             
+            # BƯỚC 3: Nếu còn lỗi không fix được → gửi AI
+            unfixable = fix_result.get("unfixable_errors", [])
+            if not unfixable:
+                # Dùng validation errors
+                unfixable = validation.get("errors", [])
+            
+            if not unfixable:
+                print("✅ No more errors!")
+                break
+            
             # Check còn key không
             if not self.key_manager.has_available_key():
                 print("❌ Hết key, dừng.")
                 break
             
             # Build correction prompt
-            error_feedback = "\n".join(validation["errors"][:20])
+            error_feedback = "\n".join(unfixable[:20])
             prompt = f"""
 Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 
@@ -333,6 +359,9 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
             # Save each iteration
             raw_path = output_dir / f"raw_iter_{iteration}.json"
             self._save_json(actions, str(raw_path))
+        
+        # Close auto fixer
+        auto_fixer.close()
         
         # Lọc chỉ giữ actions không error
         clean_actions = self._filter_valid_actions(actions, validation)
