@@ -14,7 +14,7 @@ from ..core.constants import GEMINI_MODEL_NAME, VIDEO_FPS
 from .gemini_client import GeminiKeyManager, is_rate_limit_error, is_retryable_error
 from .validator import ActionValidator
 from .auto_fixer import ActionAutoFixer
-from .prompts import SYSTEM_PROMPT, CORRECTION_PROMPT_TEMPLATE
+from .prompts import get_system_prompt, CORRECTION_PROMPT_TEMPLATE
 from .training_builder import TrainingBuilder
 
 
@@ -29,7 +29,7 @@ class AIVideoLabeler:
             thinking_config=types.ThinkingConfig(thinking_level="HIGH"),
             media_resolution="MEDIA_RESOLUTION_MEDIUM",
             response_mime_type="application/json",
-            system_instruction=[types.Part.from_text(text=SYSTEM_PROMPT)],
+            system_instruction=[types.Part.from_text(text=get_system_prompt())],
         )
         
         self.history: List[types.Content] = []
