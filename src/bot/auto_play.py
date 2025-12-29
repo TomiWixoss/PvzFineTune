@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-PvZ Auto Play Bot - AI-driven (no rule-based logic)
-All decisions made by FunctionGemma
+PvZ Auto Play Bot - AI-driven with OpenVINO
+Actions: plant(plant_type, row, col) or wait()
+Sun collection handled by rule-based logic
 """
 
 import cv2
@@ -26,12 +27,12 @@ class PvZController:
     def __init__(self, window_capture: PvZWindowCapture):
         self.window = window_capture
     
-    def collect_sun(self, x: int, y: int, pos_type: str = ""):
-        """Collect sun at pixel position"""
+    def collect_sun(self, x: int, y: int):
+        """Collect sun at pixel position (rule-based)"""
         self.window.click(x, y)
-        print(f"[AI] Collect sun at ({x}, {y}) [{pos_type}]")
+        print(f"[RULE] Collect sun at ({x}, {y})")
     
-    def plant_at_grid(self, seed_pos: tuple, row: int, col: int):
+    def plant_at_grid(self, seed_pos: tuple, row: int, col: int, plant_type: str = "pea_shooter"):
         """Plant at grid position (row, col)"""
         if row < 0 or row >= len(GRID_ROWS_Y) or col < 0 or col >= len(GRID_COLUMNS_X):
             print(f"[AI] Invalid grid position: row={row}, col={col}")
@@ -45,7 +46,7 @@ class PvZController:
         x = GRID_COLUMNS_X[col]
         y = GRID_ROWS_Y[row]
         self.window.click(x, y)
-        print(f"[AI] Plant at row={row}, col={col} ({x}, {y})")
+        print(f"[AI] Plant {plant_type} at row={row}, col={col}")
         return True
 
 
@@ -61,18 +62,74 @@ class PvZAutoPlay:
         self.last_action_time = 0
         self.last_plant_time = 0
     
+    def _build_game_state(self, det: dict) -> tuple:
+        """Build game state from detections for AI"""
+        plants_raw = det.get("pea_shooter", [])
+        zombies_raw = det.get("zombie", [])
+        seed_ready = det.get("pea_shooter_ready", [])
+        seed_cooldown = det.get("pea_shooter_cooldown", [])
+        
+        # Build plants list with row/col
+        plants = []
+        for p in plants_raw:
+            plants.append({
+                "type": "pea_shooter",
+                "row": self._get_row(p["y"]),
+                "col": self._get_col(p["x"]),
+                "x": p["x"], "y": p["y"]
+            })
+        
+        # Build zombies list with row/col
+        zombies = []
+        for z in zombies_raw:
+            zombies.append({
+                "type": "zombie",
+                "row": self._get_row(z["y"]),
+                "col": self._get_col(z["x"]),
+                "x": z["x"], "y": z["y"]
+            })
+        
+        # Build seeds list with status
+        seeds = []
+        for s in seed_ready:
+            seeds.append({"type": "pea_shooter", "status": "ready", "x": s["x"], "y": s["y"]})
+        for s in seed_cooldown:
+            seeds.append({"type": "pea_shooter", "status": "cooldown", "x": s["x"], "y": s["y"]})
+        
+        return plants, zombies, seeds
+    
+    def _get_row(self, y: int) -> int:
+        """Y coordinate → row index (0-4)"""
+        min_dist = float('inf')
+        row = 0
+        for i, row_y in enumerate(GRID_ROWS_Y):
+            if abs(y - row_y) < min_dist:
+                min_dist = abs(y - row_y)
+                row = i
+        return row
+    
+    def _get_col(self, x: int) -> int:
+        """X coordinate → col index (0-8)"""
+        min_dist = float('inf')
+        col = 0
+        for i, col_x in enumerate(GRID_COLUMNS_X):
+            if abs(x - col_x) < min_dist:
+                min_dist = abs(x - col_x)
+                col = i
+        return col
+    
     def run(self):
         print("=" * 50)
-        print("PVZ AUTO PLAY BOT - AI MODE")
+        print("PVZ AUTO PLAY BOT - AI MODE (OpenVINO)")
         print("=" * 50)
         
         # Load YOLO model
         if not self.detector.load():
             return
         
-        # Load AI model (required)
+        # Load AI model
         if not self.ai.load():
-            print("✗ AI model required! Cannot run without Gemma.")
+            print("✗ AI model required!")
             return
         
         # Find game window
@@ -84,7 +141,7 @@ class PvZAutoPlay:
         
         print("\n✓ Running! Press 'q' to quit\n")
         print(f"  AI Inference Delay: {AI_INFERENCE_DELAY}s")
-        print(f"  Sun Fall Delay: {SUN_FALL_DELAY}s")
+        print(f"  Plant Cooldown: {PLANT_COOLDOWN}s")
         print()
         
         fps_counter, fps_time, fps = 0, time.time(), 0
@@ -101,61 +158,44 @@ class PvZAutoPlay:
                 det = self.detector.detect_grouped(frame)
                 
                 suns = det.get("sun", [])
-                zombies = det.get("zombie", [])
-                plants = det.get("pea_shooter", [])
-                seed_ready = det.get("pea_shooter_ready", [])
                 sunflower_reward = det.get("sunflower_reward", [])
+                seed_ready = det.get("pea_shooter_ready", [])
                 
                 now = time.time()
                 
-                # === AI Decision (with delay for inference time) ===
-                if now - self.last_action_time > AI_INFERENCE_DELAY:
-                    game_state = GemmaInference.create_game_state(
-                        suns=suns,
-                        zombies=zombies,
-                        plants=plants,
-                        can_plant=len(seed_ready) > 0
-                    )
-                    
-                    action, args = self.ai.get_action(game_state)
-                    
-                    if action == "collect_sun" and suns:
-                        # Click vị trí gốc (lúc detect)
-                        x_orig = args.get("x", suns[0]["x"])
-                        y_orig = args.get("y", suns[0]["y"])
-                        self.controller.collect_sun(x_orig, y_orig, "original")
-                        
-                        # Wait for sun to fall
-                        time.sleep(SUN_FALL_DELAY)
-                        
-                        # Click vị trí sau delay (sun đã rơi)
-                        # Re-detect để lấy vị trí mới
-                        frame_new = self.window_capture.capture()
-                        if frame_new is not None:
-                            det_new = self.detector.detect_grouped(frame_new)
-                            suns_new = det_new.get("sun", [])
-                            if suns_new:
-                                self.controller.collect_sun(suns_new[0]["x"], suns_new[0]["y"], "delayed")
-                        
-                        self.last_action_time = now
-                    
-                    elif action == "plant_pea_shooter" and seed_ready:
-                        if now - self.last_plant_time > PLANT_COOLDOWN:
-                            row = args.get("row", 0)
-                            col = args.get("col", 0)
-                            seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
-                            self.controller.plant_at_grid(seed_pos, row, col)
-                            self.last_plant_time = now
-                            self.last_action_time = now
-                    
-                    elif action == "do_nothing":
-                        pass  # AI chose to wait
+                # === RULE-BASED: Auto collect sun ===
+                for sun in suns:
+                    self.controller.collect_sun(sun["x"], sun["y"])
+                    time.sleep(0.05)  # Small delay between clicks
                 
-                # === Click sunflower reward if visible ===
+                # === RULE-BASED: Click sunflower reward ===
                 if sunflower_reward:
                     reward = sunflower_reward[0]
                     self.window_capture.click(reward["x"], reward["y"])
-                    print("[REWARD] Clicked sunflower reward")
+                    print("[RULE] Clicked sunflower reward")
+                
+                # === AI Decision ===
+                if now - self.last_action_time > AI_INFERENCE_DELAY:
+                    plants, zombies, seeds = self._build_game_state(det)
+                    game_state = GemmaInference.create_game_state(plants, zombies, seeds)
+                    
+                    action, args = self.ai.get_action(game_state)
+                    
+                    if action == "plant" and seed_ready:
+                        if now - self.last_plant_time > PLANT_COOLDOWN:
+                            plant_type = args.get("plant_type", "pea_shooter")
+                            row = args.get("row", 2)
+                            col = args.get("col", 0)
+                            seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
+                            
+                            if self.controller.plant_at_grid(seed_pos, row, col, plant_type):
+                                self.last_plant_time = now
+                            self.last_action_time = now
+                    
+                    elif action == "wait":
+                        pass  # AI chose to wait
+                    
+                    self.last_action_time = now
                 
                 # Draw & display
                 self._draw_frame(frame, det, fps)
@@ -184,15 +224,16 @@ class PvZAutoPlay:
             "sun": (0, 255, 255),
             "zombie": (0, 0, 255),
             "pea_shooter": (0, 255, 0),
-            "pea_shooter_ready": (0, 255, 0),
+            "pea_shooter_ready": (0, 200, 0),
+            "pea_shooter_cooldown": (128, 128, 128),
         }
         
         for class_name, items in det.items():
             color = colors.get(class_name, (255, 255, 255))
             for item in items:
                 cv2.circle(frame, (item["x"], item["y"]), 15, color, 2)
-                cv2.putText(frame, class_name.split("_")[0].upper(), 
-                           (item["x"]-20, item["y"]-20),
+                label = class_name.replace("_", " ").upper()[:8]
+                cv2.putText(frame, label, (item["x"]-20, item["y"]-20),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
         
         # Status bar
@@ -200,8 +241,9 @@ class PvZAutoPlay:
         zombies = len(det.get("zombie", []))
         plants = len(det.get("pea_shooter", []))
         ready = len(det.get("pea_shooter_ready", []))
+        cooldown = len(det.get("pea_shooter_cooldown", []))
         
-        status = f"FPS:{fps} | Sun:{suns} | Zombie:{zombies} | Plant:{plants} | Ready:{ready}"
+        status = f"FPS:{fps} | Sun:{suns} | Zombie:{zombies} | Plant:{plants} | Seed:{'R' if ready else 'C'}"
         cv2.putText(frame, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
 
