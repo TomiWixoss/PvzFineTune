@@ -20,11 +20,12 @@ from .controller import GameController
 class AutoPlayBot:
     """Main auto-play bot - AI driven"""
     
-    def __init__(self, yolo_path: str = None, gemma_path: str = None):
+    def __init__(self, yolo_path: str = None, gemma_path: str = None, debug: bool = False):
         self.window = WindowCapture()
         self.detector = YOLODetector(yolo_path)
         self.ai = GemmaInference(gemma_path)
         self.controller = None
+        self.debug = debug
     
     def _build_game_state(self, det: Dict) -> Tuple[List, List, List]:
         """Build game state from detections - auto detect all classes"""
@@ -120,13 +121,24 @@ class AutoPlayBot:
                 if ready_seeds:
                     plants, zombies, seeds = self._build_game_state(det)
                     game_state = GemmaInference.create_game_state(plants, zombies, seeds)
+                    
+                    if self.debug:
+                        print(f"\n[DEBUG] Game State: {game_state}")
+                    
                     action, args = self.ai.get_action(game_state)
                     ai_calls += 1
+                    
+                    if self.debug:
+                        print(f"[DEBUG] AI Response: action={action}, args={args}")
                     
                     if action == "plant":
                         # Find matching seed type
                         plant_type = args.get("plant_type", ready_seeds[0]["type"])
                         seed = next((s for s in ready_seeds if s["type"] == plant_type), ready_seeds[0])
+                        
+                        if self.debug:
+                            print(f"[DEBUG] Planting {plant_type} at row={args.get('row')}, col={args.get('col')}")
+                        
                         self.controller.plant_at_grid(
                             (seed["x"], seed["y"]),
                             args.get("row", 2),
@@ -134,6 +146,12 @@ class AutoPlayBot:
                             plant_type
                         )
                         ai_acted = True
+                    elif action == "wait":
+                        if self.debug:
+                            print(f"[DEBUG] AI chose to WAIT")
+                    else:
+                        if self.debug:
+                            print(f"[DEBUG] Unknown action: {action}")
                 
                 # Thu sun CHỈ KHI AI không có action
                 if not ai_acted and det.get("sun"):
@@ -186,9 +204,10 @@ def main():
     parser = argparse.ArgumentParser(description='PvZ Auto Play Bot')
     parser.add_argument('-m', '--model', help='YOLO model path')
     parser.add_argument('-g', '--gemma', help='Gemma model path')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug output')
     args = parser.parse_args()
     
-    bot = AutoPlayBot(yolo_path=args.model, gemma_path=args.gemma)
+    bot = AutoPlayBot(yolo_path=args.model, gemma_path=args.gemma, debug=args.debug)
     bot.run()
 
 
