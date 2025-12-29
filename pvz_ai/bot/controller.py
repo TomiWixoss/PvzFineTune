@@ -16,10 +16,16 @@ class GameController:
     def __init__(self, window: WindowCapture):
         self.window = window
     
+    def cancel_selection(self):
+        """Cancel seed selection bằng right click"""
+        import pyautogui
+        pyautogui.rightClick()
+    
     def collect_sun(self, x: int, y: int):
-        """Collect sun at pixel position (rule-based)"""
+        """Collect sun at pixel position"""
+        # Luôn cancel trước để đảm bảo không đang chọn seed
+        self.cancel_selection()
         self.window.click(x, y)
-        print(f"[RULE] Collect sun at ({x}, {y})")
     
     def plant_at_grid(
         self, 
@@ -35,6 +41,9 @@ class GameController:
         if row < 0 or row >= len(grid_rows) or col < 0 or col >= len(grid_cols):
             print(f"[AI] Invalid grid position: row={row}, col={col}")
             return False
+        
+        # Cancel trước để đảm bảo không đang chọn seed khác
+        self.cancel_selection()
         
         # Click seed packet
         self.window.click(seed_pos[0], seed_pos[1])
