@@ -12,7 +12,8 @@ def convert_to_openvino(
     pytorch_path: str,
     output_path: str = "models/gemma",
     clear_output: bool = True,
-    delete_source: bool = False
+    delete_source: bool = False,
+    compress_fp16: bool = True
 ):
     """
     Convert PyTorch model to OpenVINO IR format
@@ -22,6 +23,7 @@ def convert_to_openvino(
         output_path: Output path for OpenVINO model
         clear_output: Clear output folder before saving
         delete_source: Delete source PyTorch folder after conversion
+        compress_fp16: Compress weights to FP16 (reduces size by ~50%)
     """
     from optimum.intel import OVModelForCausalLM
     from transformers import AutoTokenizer
@@ -40,24 +42,36 @@ def convert_to_openvino(
     output_path.mkdir(parents=True, exist_ok=True)
     
     print(f"Loading PyTorch model from {pytorch_path}...")
-    print("Converting to OpenVINO IR format...")
+    print(f"Converting to OpenVINO IR format (FP16={compress_fp16})...")
     
-    # Load and convert
+    # Load and convert with FP16 compression
     ov_model = OVModelForCausalLM.from_pretrained(
         str(pytorch_path),
         export=True,
         compile=False,
         local_files_only=True,
+        load_in_8bit=False,
     )
     tokenizer = AutoTokenizer.from_pretrained(
         str(pytorch_path),
         local_files_only=True,
     )
     
-    # Save
+    # Save with FP16 compression
     print(f"Saving to {output_path}...")
-    ov_model.save_pretrained(output_path)
-    tokenizer.save_pretrained(output_path)
+    if compress_fp16:
+        from openvino import save_model
+        save_model(ov_model.model, output_path / "openvino_model.xml", compress_to_fp16=True)
+        # Save config and tokenizer separately
+        ov_model.config.save_pretrained(output_path)
+        tokenizer.save_pretrained(output_path)
+        # Copy generation_config if exists
+        gen_config = pytorch_path / "generation_config.json"
+        if gen_config.exists():
+            shutil.copy(gen_config, output_path / "generation_config.json")
+    else:
+        ov_model.save_pretrained(output_path)
+        tokenizer.save_pretrained(output_path)
     
     # Verify
     files = list(output_path.glob("*"))
@@ -83,13 +97,15 @@ def main():
     parser.add_argument('-o', '--output', default='models/gemma', help='Output path')
     parser.add_argument('--no-clear', action='store_true', help='Do not clear output folder')
     parser.add_argument('--delete-source', action='store_true', help='Delete source PyTorch folder after conversion')
+    parser.add_argument('--no-fp16', action='store_true', help='Do not compress to FP16')
     args = parser.parse_args()
     
     convert_to_openvino(
         args.pytorch_path,
         args.output,
         clear_output=not args.no_clear,
-        delete_source=args.delete_source
+        delete_source=args.delete_source,
+        compress_fp16=not args.no_fp16
     )
 
 
