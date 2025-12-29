@@ -19,21 +19,35 @@ class GameStateDetector:
     def detect(self, frame, conf: float = None) -> Dict[str, Any]:
         """
         YOLO detect frame → game_state
-        
-        Returns:
-            {
-                "text": "PLANTS:[...]. ZOMBIES:[...]. SEEDS:[...]",
-                "plants": [...],
-                "zombies": [...],
-                "seeds": [...]
-            }
+        Tự động detect tất cả classes từ model
         """
         grouped = self.detector.detect_grouped(frame, conf)
         
         zombies = grouped.get("zombie", [])
-        plants = grouped.get("pea_shooter", [])
-        seed_ready = grouped.get("pea_shooter_ready", [])
-        seed_cooldown = grouped.get("pea_shooter_cooldown", [])
+        
+        # Auto-detect plants (không có _ready, _cooldown, _reward trong tên)
+        plants = []
+        plant_classes = ["pea_shooter", "sunflower", "wall_nut", "cherry_bomb", "snow_pea", "chomper", "repeater"]
+        for cls in plant_classes:
+            for p in grouped.get(cls, []):
+                p["type"] = cls
+                plants.append(p)
+        
+        # Auto-detect seeds từ tất cả classes có _ready, _cooldown, _reward
+        seeds = []
+        for class_name, detections in grouped.items():
+            if "_ready" in class_name:
+                plant_type = class_name.replace("_ready", "")
+                for s in detections:
+                    seeds.append({"type": plant_type, "status": "ready", "x": s["x"], "y": s["y"], "conf": s["conf"]})
+            elif "_cooldown" in class_name:
+                plant_type = class_name.replace("_cooldown", "")
+                for s in detections:
+                    seeds.append({"type": plant_type, "status": "cooldown", "x": s["x"], "y": s["y"], "conf": s["conf"]})
+            elif "_reward" in class_name:
+                plant_type = class_name.replace("_reward", "")
+                for s in detections:
+                    seeds.append({"type": plant_type, "status": "ready", "x": s["x"], "y": s["y"], "conf": s["conf"]})
         
         # Add row/col info
         for z in zombies:
@@ -44,14 +58,6 @@ class GameStateDetector:
         for p in plants:
             p["row"] = get_row(p["y"], self.grid_rows_y)
             p["col"] = get_col(p["x"], self.grid_cols_x)
-            p["type"] = "pea_shooter"
-        
-        # Build seeds list
-        seeds = []
-        for s in seed_ready:
-            seeds.append({"type": "pea_shooter", "status": "ready", "x": s["x"], "y": s["y"], "conf": s["conf"]})
-        for s in seed_cooldown:
-            seeds.append({"type": "pea_shooter", "status": "cooldown", "x": s["x"], "y": s["y"], "conf": s["conf"]})
         
         text = self._build_text(plants, zombies, seeds)
         

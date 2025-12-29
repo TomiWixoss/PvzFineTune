@@ -4,38 +4,6 @@ Constants - Các hằng số không thay đổi
 """
 
 # ===========================================
-# YOLO CLASS NAMES
-# ===========================================
-CLASS_NAMES = {
-    0: "cherry_bomb_reward",
-    1: "pea_shooter",
-    2: "pea_shooter_cooldown",
-    3: "pea_shooter_ready",
-    4: "sun",
-    5: "sunflower",
-    6: "sunflower_cooldown",
-    7: "sunflower_ready",
-    8: "sunflower_reward",
-    9: "zombie",
-}
-
-# ===========================================
-# CLASS COLORS (BGR format for OpenCV)
-# ===========================================
-CLASS_COLORS = {
-    "cherry_bomb_reward": (0, 0, 255),
-    "pea_shooter": (0, 255, 0),
-    "pea_shooter_cooldown": (128, 128, 128),
-    "pea_shooter_ready": (0, 255, 0),
-    "sun": (0, 255, 255),
-    "sunflower": (0, 200, 255),
-    "sunflower_cooldown": (128, 128, 128),
-    "sunflower_ready": (0, 200, 255),
-    "sunflower_reward": (0, 200, 255),
-    "zombie": (0, 0, 255),
-}
-
-# ===========================================
 # GAME GRID CONFIG (5 rows x 9 cols)
 # ===========================================
 GRID_ROWS = 5

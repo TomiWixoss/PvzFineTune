@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 YOLO Detector - Object detection với OpenVINO
+Tự động load classes từ model metadata
 """
 
 import cv2
 import numpy as np
+import yaml
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from ..core.constants import (
-    CLASS_NAMES, CLASS_COLORS,
-    DEFAULT_CONFIDENCE, DEFAULT_IOU_THRESHOLD, INPUT_SIZE
-)
-from ..core.config import Config
+from ..core.constants import DEFAULT_CONFIDENCE, DEFAULT_IOU_THRESHOLD, INPUT_SIZE
 
 try:
     from openvino.runtime import Core
@@ -20,17 +19,52 @@ except ImportError:
     HAS_OPENVINO = False
 
 
+def generate_colors(n: int) -> Dict[str, tuple]:
+    """Generate distinct colors for n classes"""
+    colors = {}
+    for i in range(n):
+        hue = int(180 * i / n)
+        color = cv2.cvtColor(np.uint8([[[hue, 255, 200]]]), cv2.COLOR_HSV2BGR)[0][0]
+        colors[i] = tuple(int(c) for c in color)
+    return colors
+
+
 class YOLODetector:
-    """YOLO object detector với OpenVINO"""
+    """YOLO object detector với OpenVINO - auto load classes từ metadata"""
     
     def __init__(self, model_path: str = None):
+        from ..core.config import Config
         self.model_path = model_path or str(Config.YOLO_MODEL_PATH)
         self.model = None
         self.input_layer = None
         self.output_layer = None
         self.input_size = INPUT_SIZE
-        self.class_names = CLASS_NAMES
-        self.class_colors = CLASS_COLORS
+        self.class_names = {}
+        self.class_colors = {}
+    
+    def _load_metadata(self):
+        """Load class names từ metadata.yaml"""
+        model_dir = Path(self.model_path).parent
+        metadata_path = model_dir / "metadata.yaml"
+        
+        if metadata_path.exists():
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = yaml.safe_load(f)
+            
+            names = metadata.get("names", {})
+            if isinstance(names, dict):
+                self.class_names = {int(k): v for k, v in names.items()}
+            elif isinstance(names, list):
+                self.class_names = {i: name for i, name in enumerate(names)}
+            
+            print(f"✓ Loaded {len(self.class_names)} classes from metadata")
+        else:
+            print(f"⚠ No metadata.yaml found, using default classes")
+        
+        # Generate colors
+        colors = generate_colors(len(self.class_names))
+        self.class_colors = {self.class_names.get(i, f"class_{i}"): colors.get(i, (255,255,255)) 
+                            for i in range(len(self.class_names))}
     
     def load(self) -> bool:
         """Load OpenVINO model"""
@@ -40,6 +74,8 @@ class YOLODetector:
         
         try:
             print(f"Loading model: {self.model_path}")
+            self._load_metadata()
+            
             ie = Core()
             self.model = ie.compile_model(model=self.model_path, device_name="CPU")
             self.input_layer = self.model.input(0)
