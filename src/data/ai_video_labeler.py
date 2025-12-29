@@ -34,6 +34,21 @@ Bạn là chuyên gia phân tích gameplay Plants vs Zombies. Xem video frame-by
 ## ⚠️ LƯU Ý QUAN TRỌNG
 - **KHÔNG ghi action thu thập sun** - việc này do code rule tự động xử lý
 - **CHỈ ghi 2 loại action**: `plant` (trồng cây) và `wait` (chờ)
+- **TIMESTAMP CHÍNH XÁC**: Ghi tới millisecond (M:SS.mmm)
+
+## ⏱️ TIMESTAMP FORMAT (BẮT BUỘC):
+Format: `M:SS.mmm` (phút:giây.miligiây)
+- M = phút (0, 1, 2, ...)
+- SS = giây (00-59)
+- mmm = miligiây (000-999)
+
+Ví dụ:
+- `0:05.250` = 5 giây 250ms
+- `0:18.500` = 18 giây 500ms  
+- `1:02.750` = 1 phút 2 giây 750ms
+- `2:30.125` = 2 phút 30 giây 125ms
+
+⚠️ PHẢI ghi đủ 3 chữ số miligiây!
 
 ## 🎯 2 LOẠI ACTION:
 
@@ -58,12 +73,13 @@ Col 0 → → → → → → → → Col 8
 ## 🎬 OUTPUT FORMAT:
 ```json
 [
-  {"time": "M:SS", "action": "plant", "args": {"plant_type": "...", "row": N, "col": N}, "note": "..."},
-  {"time": "M:SS", "action": "wait", "args": {}, "note": "..."}
+  {"time": "0:18.500", "action": "plant", "args": {"plant_type": "pea_shooter", "row": 2, "col": 0}, "note": "..."},
+  {"time": "0:25.250", "action": "wait", "args": {}, "note": "..."}
 ]
 ```
 
 ⚠️ CHỈ trả về JSON array, không text khác.
+⚠️ Timestamp PHẢI có millisecond (M:SS.mmm)
 """
 
 
@@ -193,24 +209,40 @@ class AIVideoLabeler:
             json.dump(data, f, indent=2, ensure_ascii=False)
         print(f"💾 Saved: {path}")
     
+    def _filter_valid_actions(self, actions: list, validation: dict) -> list:
+        """Lọc chỉ giữ lại các actions không có error"""
+        if not validation.get("validated_samples"):
+            return actions
+        
+        valid_actions = []
+        for sample in validation["validated_samples"]:
+            if sample.get("valid", False):
+                # Tìm action tương ứng
+                idx = sample.get("id", 0) - 1
+                if 0 <= idx < len(actions):
+                    valid_actions.append(actions[idx])
+        
+        return valid_actions
+    
     def process_video(
         self,
         video_path: str,
         output_path: Optional[str] = None,
-        max_iterations: int = 3
     ) -> dict:
         """
         Main pipeline:
         1. Load video
         2. Call AI (chat) -> get actions
         3. Save raw immediately
-        4. Validate
-        5. If not passed, send errors back to AI (same chat) and repeat
+        4. Validate với video + YOLO
+        5. Nếu chưa pass > 90%, gửi errors về AI và lặp lại
+        6. Lặp vô hạn tới khi pass hoặc hết key
+        7. Cuối cùng lưu bản sạch (chỉ actions không error)
         """
         print(f"\n{'='*50}")
         print(f"🎬 Processing: {video_path}")
         print(f"   Model: {MODEL_NAME} | Thinking: HIGH")
-        print(f"   Mode: Chat conversation (with history)")
+        print(f"   Mode: Loop until pass > 90% or no keys left")
         print(f"{'='*50}\n")
         
         # Reset chat history cho video mới
@@ -232,17 +264,23 @@ class AIVideoLabeler:
             is_first=True
         )
         
+        if not actions:
+            print("❌ AI không trả về actions, dừng.")
+            return {"video": video_path, "actions": [], "validation": {"passed": False, "score": 0}}
+        
         # Save raw immediately
-        raw_path = output_dir / f"raw_iter_0.json"
+        iteration = 0
+        raw_path = output_dir / f"raw_iter_{iteration}.json"
         self._save_json(actions, str(raw_path))
         
-        # Validation loop - dùng video để validate
+        # Validation loop - lặp vô hạn tới khi pass hoặc hết key
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
         
-        for iteration in range(max_iterations):
-            print(f"\n--- Iteration {iteration + 1}/{max_iterations} ---")
+        while True:
+            iteration += 1
+            print(f"\n--- Iteration {iteration} ---")
             
-            # Thử validate với video trước, nếu lỗi thì dùng simple
+            # Validate với video + YOLO
             try:
                 validation = validate_actions_with_video(actions, video_path)
                 print("   (Validated with video + YOLO)")
@@ -257,10 +295,14 @@ class AIVideoLabeler:
                 print("✅ PASSED!")
                 break
             
-            if iteration < max_iterations - 1:
-                # Build correction prompt
-                error_feedback = "\n".join(validation["errors"][:20])
-                prompt = f"""
+            # Check còn key không
+            if not self.key_manager.has_available_key():
+                print("❌ Hết key, dừng.")
+                break
+            
+            # Build correction prompt
+            error_feedback = "\n".join(validation["errors"][:20])
+            prompt = f"""
 Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 
 ## LỖI CẦN SỬA:
@@ -268,29 +310,49 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 
 ## YÊU CẦU:
 1. Xem lại video (bạn đã xem ở lượt trước)
-2. Sửa các lỗi (không trồng chồng, row 0-4, col 0-8)
-3. Trả về JSON array đã sửa
+2. Sửa các lỗi:
+   - Không trồng chồng lên ô đã có cây
+   - row trong range 0-4, col trong range 0-8
+   - CHỈ plant khi seed packet READY (không cooldown)
+   - Timestamp phải chính xác khi cây THỰC SỰ được đặt xuống
+3. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
+4. Trả về JSON array đã sửa
 """
-                # Reset blocked keys for retry
-                self.key_manager.reset_blocked()
-                
-                # Gọi tiếp trong cùng conversation (is_first=False, không gửi lại video)
-                actions = self._call_ai_chat(video_bytes, mime_type, prompt, is_first=False)
-                
-                # Save each iteration
-                raw_path = output_dir / f"raw_iter_{iteration + 1}.json"
-                self._save_json(actions, str(raw_path))
-            else:
-                print("⚠️ Max iterations reached")
+            # Reset blocked keys for retry
+            self.key_manager.reset_blocked()
+            
+            # Gọi tiếp trong cùng conversation
+            new_actions = self._call_ai_chat(video_bytes, mime_type, prompt, is_first=False)
+            
+            if not new_actions:
+                print("❌ AI không trả về actions, dừng.")
+                break
+            
+            actions = new_actions
+            
+            # Save each iteration
+            raw_path = output_dir / f"raw_iter_{iteration}.json"
+            self._save_json(actions, str(raw_path))
+        
+        # Lọc chỉ giữ actions không error
+        clean_actions = self._filter_valid_actions(actions, validation)
+        print(f"\n📋 Clean actions: {len(clean_actions)}/{len(actions)}")
         
         # Final result
         result = {
             "video": video_path,
             "timestamp": datetime.now().isoformat(),
             "model": MODEL_NAME,
-            "iterations": min(iteration + 1, max_iterations),
-            "validation": validation,
-            "actions": actions
+            "iterations": iteration,
+            "validation": {
+                "passed": validation["passed"],
+                "score": validation["score"],
+                "total": validation["total"],
+                "errors_count": len(validation.get("errors", [])),
+                "warnings_count": len(validation.get("warnings", [])),
+            },
+            "actions": clean_actions,  # Chỉ lưu actions sạch
+            "all_actions": actions,    # Lưu cả bản gốc để debug
         }
         
         self._save_json(result, output_path)
@@ -305,11 +367,10 @@ def main():
     parser.add_argument("video", help="Path to video file")
     parser.add_argument("-o", "--output", help="Output JSON path")
     parser.add_argument("-k", "--api-key", help="Gemini API key (optional, uses .env if not provided)")
-    parser.add_argument("-i", "--iterations", type=int, default=3, help="Max correction iterations")
     args = parser.parse_args()
     
     labeler = AIVideoLabeler(api_key=args.api_key)
-    result = labeler.process_video(args.video, args.output, args.iterations)
+    result = labeler.process_video(args.video, args.output)
     
     print(f"\n{'='*50}")
     print(f"Final: {result['validation']['score']:.1f}% | {len(result['actions'])} actions")

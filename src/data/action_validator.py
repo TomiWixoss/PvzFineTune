@@ -34,7 +34,7 @@ def validate_actions_with_video(
             "validated_samples": list  # Samples đã validate với game_state
         }
     """
-    from data.video_dataset_builder import VideoDatasetBuilder
+    from .video_dataset_builder import VideoDatasetBuilder
     
     errors = []
     warnings = []
