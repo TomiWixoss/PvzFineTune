@@ -222,12 +222,10 @@ class VideoDatasetBuilder:
         
         Returns:
             {
-                "text": "PLANTS: [(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES: 3 at rows [1,2,2]. CAN_PLANT",
-                "plants": [{"type": "pea_shooter", "row": 2, "col": 0, "x": 100, "y": 260, "conf": 0.92}, ...],
-                "zombies": [{"row": 2, "col": 7, "x": 600, "y": 260, "conf": 0.88}, ...],
-                "zombie_count": 3,
-                "seed_ready": [...],
-                "can_plant": True
+                "text": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,7)]. SEEDS:[(pea_shooter,ready)]",
+                "plants": [{"type": "pea_shooter", "row": 2, "col": 0, ...}, ...],
+                "zombies": [{"type": "zombie", "row": 2, "col": 7, ...}, ...],
+                "seeds": [{"type": "pea_shooter", "status": "ready"}, ...]
             }
         """
         grouped = self.detector.detect_grouped(frame, self.conf)
@@ -235,12 +233,13 @@ class VideoDatasetBuilder:
         zombies = grouped.get("zombie", [])
         plants = grouped.get("pea_shooter", [])
         seed_ready = grouped.get("pea_shooter_ready", [])
+        seed_cooldown = grouped.get("pea_shooter_cooldown", [])
         
         # Add row/col/type info to zombies
         for z in zombies:
             z["row"] = self._get_row(z["y"])
             z["col"] = self._get_col(z["x"])
-            z["type"] = "zombie"  # TODO: detect zombie type from YOLO (zombie, cone_zombie, bucket_zombie, ...)
+            z["type"] = "zombie"  # TODO: detect zombie type from YOLO
         
         # Add row/col/type info to plants
         for p in plants:
@@ -248,18 +247,21 @@ class VideoDatasetBuilder:
             p["col"] = self._get_col(p["x"])
             p["type"] = "pea_shooter"  # TODO: detect plant type from YOLO
         
-        can_plant = len(seed_ready) > 0
+        # Build seeds list with status
+        seeds = []
+        for s in seed_ready:
+            seeds.append({"type": "pea_shooter", "status": "ready", "x": s["x"], "y": s["y"], "conf": s["conf"]})
+        for s in seed_cooldown:
+            seeds.append({"type": "pea_shooter", "status": "cooldown", "x": s["x"], "y": s["y"], "conf": s["conf"]})
         
         # Build text representation (for Gemma training)
-        text = self._build_state_text(plants, zombies, can_plant)
+        text = self._build_state_text(plants, zombies, seeds)
         
         return {
             "text": text,
             "plants": plants,
             "zombies": zombies,
-            "zombie_count": len(zombies),
-            "seed_ready": seed_ready,
-            "can_plant": can_plant
+            "seeds": seeds
         }
     
     def _get_row(self, y: int) -> int:
@@ -284,8 +286,8 @@ class VideoDatasetBuilder:
                 col = i
         return col
     
-    def _build_state_text(self, plants: list, zombies: list, can_plant: bool) -> str:
-        """Build text representation cho Gemma - bao gồm plants đã trồng và zombies"""
+    def _build_state_text(self, plants: list, zombies: list, seeds: list) -> str:
+        """Build text representation cho Gemma - plants, zombies, và seed packets"""
         parts = []
         
         # Plants info: (type,row,col) cho mỗi plant
@@ -296,7 +298,7 @@ class VideoDatasetBuilder:
         else:
             parts.append("PLANTS:[]")
         
-        # Zombies info: (type,row,col) cho mỗi zombie - giống format plant
+        # Zombies info: (type,row,col) cho mỗi zombie
         if zombies:
             zombie_positions = [(z.get("type", "zombie"), z.get("row", 0), z.get("col", 8)) for z in zombies]
             zombie_str = ",".join([f"({t},{r},{c})" for t, r, c in zombie_positions])
@@ -304,8 +306,13 @@ class VideoDatasetBuilder:
         else:
             parts.append("ZOMBIES:[]")
         
-        # Plant ability
-        parts.append("CAN_PLANT" if can_plant else "CANNOT_PLANT")
+        # Seeds info: (type,status) cho mỗi seed packet
+        if seeds:
+            seed_info = [(s.get("type", "unknown"), s.get("status", "unknown")) for s in seeds]
+            seed_str = ",".join([f"({t},{st})" for t, st in seed_info])
+            parts.append(f"SEEDS:[{seed_str}]")
+        else:
+            parts.append("SEEDS:[]")
         
         return ". ".join(parts)
     
@@ -348,7 +355,7 @@ class VideoDatasetBuilder:
             # Detect → game_state
             game_state = self.detect_game_state(frame)
             print(f"  State: {game_state['text']}")
-            print(f"  Plants: {len(game_state['plants'])} | Zombies: {game_state['zombie_count']}")
+            print(f"  Plants: {len(game_state['plants'])} | Zombies: {len(game_state['zombies'])} | Seeds: {len(game_state['seeds'])}")
             
             # Save frame
             frame_filename = None
