@@ -59,7 +59,4 @@ INPUT_SIZE = (640, 640)
 # ===========================================
 # BOT CONFIG
 # ===========================================
-AI_INFERENCE_DELAY = 0.3  # seconds - time for AI to process
-SUN_FALL_DELAY = 0.5  # seconds - wait for sun to land before collecting
-PLANT_COOLDOWN = 1.5  # seconds
 TARGET_FPS = 30

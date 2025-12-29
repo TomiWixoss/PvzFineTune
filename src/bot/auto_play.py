@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     YOLO_MODEL_PATH, GEMMA_MODEL_PATH,
     GRID_ROWS_Y, GRID_COLUMNS_X,
-    AI_INFERENCE_DELAY, SUN_FALL_DELAY, PLANT_COOLDOWN, TARGET_FPS
+    TARGET_FPS
 )
 from utils.window_capture import PvZWindowCapture
 from inference.yolo_detector import YOLODetector
@@ -59,8 +59,7 @@ class PvZAutoPlay:
         self.ai = GemmaInference(gemma_path or GEMMA_MODEL_PATH)
         self.controller = None
         
-        self.last_action_time = 0
-        self.last_plant_time = 0
+
     
     def _build_game_state(self, det: dict) -> tuple:
         """Build game state from detections for AI"""
@@ -140,9 +139,6 @@ class PvZAutoPlay:
         self.controller = PvZController(self.window_capture)
         
         print("\n✓ Running! Press 'q' to quit\n")
-        print(f"  AI Inference Delay: {AI_INFERENCE_DELAY}s")
-        print(f"  Plant Cooldown: {PLANT_COOLDOWN}s")
-        print()
         
         fps_counter, fps_time, fps = 0, time.time(), 0
         frame_time = 1.0 / TARGET_FPS
@@ -161,8 +157,6 @@ class PvZAutoPlay:
                 sunflower_reward = det.get("sunflower_reward", [])
                 seed_ready = det.get("pea_shooter_ready", [])
                 
-                now = time.time()
-                
                 # === RULE-BASED: Auto collect sun ===
                 for sun in suns:
                     self.controller.collect_sun(sun["x"], sun["y"])
@@ -174,28 +168,18 @@ class PvZAutoPlay:
                     self.window_capture.click(reward["x"], reward["y"])
                     print("[RULE] Clicked sunflower reward")
                 
-                # === AI Decision ===
-                if now - self.last_action_time > AI_INFERENCE_DELAY:
-                    plants, zombies, seeds = self._build_game_state(det)
-                    game_state = GemmaInference.create_game_state(plants, zombies, seeds)
-                    
-                    action, args = self.ai.get_action(game_state)
-                    
-                    if action == "plant" and seed_ready:
-                        if now - self.last_plant_time > PLANT_COOLDOWN:
-                            plant_type = args.get("plant_type", "pea_shooter")
-                            row = args.get("row", 2)
-                            col = args.get("col", 0)
-                            seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
-                            
-                            if self.controller.plant_at_grid(seed_pos, row, col, plant_type):
-                                self.last_plant_time = now
-                            self.last_action_time = now
-                    
-                    elif action == "wait":
-                        pass  # AI chose to wait
-                    
-                    self.last_action_time = now
+                # === AI Decision (no delay, runs every frame) ===
+                plants, zombies, seeds = self._build_game_state(det)
+                game_state = GemmaInference.create_game_state(plants, zombies, seeds)
+                
+                action, args = self.ai.get_action(game_state)
+                
+                if action == "plant" and seed_ready:
+                    plant_type = args.get("plant_type", "pea_shooter")
+                    row = args.get("row", 2)
+                    col = args.get("col", 0)
+                    seed_pos = (seed_ready[0]["x"], seed_ready[0]["y"])
+                    self.controller.plant_at_grid(seed_pos, row, col, plant_type)
                 
                 # Draw & display
                 self._draw_frame(frame, det, fps)

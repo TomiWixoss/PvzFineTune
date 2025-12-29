@@ -39,3 +39,4 @@ tool/
 
 models/gemma/model.safetensors
 models/gemma/tokenizer*
+models/gemma/openvino_model*
