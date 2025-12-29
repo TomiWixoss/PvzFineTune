@@ -1,0 +1,34 @@
+# Core
+numpy
+opencv-python
+
+# Window capture & control
+pygetwindow
+pyautogui
+keyboard
+mss
+dxcam
+
+# YOLO inference (OpenVINO)
+openvino
+
+# Gemma inference (OpenVINO)
+optimum[openvino]
+transformers
+sentencepiece
+protobuf
+
+# Data collection
+yt-dlp
+
+# AI Video Labeling (Gemini)
+google-generativeai
+python-dotenv
+
+# Training (Colab - optional)
+# torch
+# datasets
+# trl
+# accelerate
+# roboflow
+# ultralytics
