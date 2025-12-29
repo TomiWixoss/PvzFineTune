@@ -185,7 +185,7 @@ class AIVideoLabeler:
         self._save_json(actions, str(output_dir / f"raw_iter_{iteration}.json"))
         
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
-        validated_indices = set()  # Indices đã pass validation - skip ở lần sau
+        validated_actions = {}  # {index: action} - lưu actions đã pass validation
         
         # Validation loop
         while True:
@@ -194,7 +194,7 @@ class AIVideoLabeler:
             
             # Auto-fix, skip những action đã validated
             print("🔧 Auto-fixing...")
-            fix_result = auto_fixer.fix_actions(actions, skip_indices=validated_indices)
+            fix_result = auto_fixer.fix_actions(actions, skip_indices=set(validated_actions.keys()))
             if fix_result["fix_count"] > 0:
                 print(f"   ✅ Fixed {fix_result['fix_count']} actions")
                 actions = fix_result["fixed_actions"]
@@ -213,10 +213,10 @@ class AIVideoLabeler:
                     except:
                         pass
             
-            # Cập nhật validated_indices (những action pass lần này)
-            for i in range(len(actions)):
-                if i not in error_indices and i not in validated_indices:
-                    validated_indices.add(i)
+            # Lưu actions đã pass vào validated_actions
+            for i, action in enumerate(actions):
+                if i not in error_indices and i not in validated_actions:
+                    validated_actions[i] = action.copy()
             
             total = len(actions)
             error_count = len(error_indices)
@@ -230,7 +230,7 @@ class AIVideoLabeler:
                 "warnings": []
             }
             
-            print(f"📊 Score: {score:.1f}% ({total} actions, {len(validated_indices)} validated)")
+            print(f"📊 Score: {score:.1f}% ({total} actions, {len(validated_actions)} validated)")
             print(f"   Errors: {error_count}")
             
             if validation["passed"]:
@@ -263,13 +263,39 @@ class AIVideoLabeler:
             if not new_actions:
                 break
             
-            actions = new_actions
+            # Rebuild actions: giữ validated, thay/xóa error actions
+            rebuilt_actions = []
+            new_validated = {}  # Rebuild với index mới
+            new_idx = 0
+            
+            for i, action in enumerate(actions):
+                if i in validated_actions:
+                    # Giữ nguyên action đã validated, cập nhật index mới
+                    new_validated[len(rebuilt_actions)] = validated_actions[i]
+                    rebuilt_actions.append(validated_actions[i])
+                elif i in error_indices:
+                    # Thay bằng action mới từ AI (nếu có)
+                    if new_idx < len(new_actions):
+                        rebuilt_actions.append(new_actions[new_idx])
+                        new_idx += 1
+                    # Nếu AI bỏ luôn (không có action mới) thì skip
+                else:
+                    rebuilt_actions.append(action)
+            
+            # Nếu AI trả về nhiều hơn số error, thêm vào cuối
+            while new_idx < len(new_actions):
+                rebuilt_actions.append(new_actions[new_idx])
+                new_idx += 1
+            
+            actions = rebuilt_actions
+            validated_actions = new_validated
+            
             self._save_json(actions, str(output_dir / f"raw_iter_{iteration}.json"))
         
         auto_fixer.close()
         
-        # Lấy actions đã validated
-        clean_actions = [a for i, a in enumerate(actions) if i in validated_indices]
+        # Lấy actions đã validated (theo thứ tự index)
+        clean_actions = [validated_actions[i] for i in sorted(validated_actions.keys())]
         if not clean_actions:
             clean_actions = actions
         print(f"\n📋 Clean actions: {len(clean_actions)}/{len(actions)}")
