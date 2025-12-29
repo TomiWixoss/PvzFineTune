@@ -3,6 +3,7 @@
 Action Validator - Validate actions với game state từ video
 """
 
+import re
 from typing import Any, Dict, List, Optional
 
 from ..core.constants import VALID_ACTIONS, GRID_ROWS, GRID_COLS
@@ -10,6 +11,72 @@ from ..core.constants import VALID_ACTIONS, GRID_ROWS, GRID_COLS
 
 class ActionValidator:
     """Validate actions"""
+    
+    @staticmethod
+    def parse_game_state_text(game_state_text: str) -> Dict[str, Any]:
+        """
+        Parse game_state string thành dict
+        Format: "PLANTS:[(type,row,col),...]. ZOMBIES:[(type,row,col),...]. SEEDS:[(type,status),...]"
+        """
+        result = {"plants": [], "zombies": [], "seeds": []}
+        
+        if not game_state_text:
+            return result
+        
+        # Parse PLANTS
+        plants_match = re.search(r'PLANTS:\[(.*?)\]', game_state_text)
+        if plants_match:
+            plants_str = plants_match.group(1)
+            if plants_str:
+                plant_pattern = re.findall(r'\(([^,]+),(\d+),(\d+)\)', plants_str)
+                for plant_type, row, col in plant_pattern:
+                    result["plants"].append({
+                        "type": plant_type,
+                        "row": int(row),
+                        "col": int(col)
+                    })
+        
+        # Parse ZOMBIES
+        zombies_match = re.search(r'ZOMBIES:\[(.*?)\]', game_state_text)
+        if zombies_match:
+            zombies_str = zombies_match.group(1)
+            if zombies_str:
+                zombie_pattern = re.findall(r'\(([^,]+),(\d+),(\d+)\)', zombies_str)
+                for zombie_type, row, col in zombie_pattern:
+                    result["zombies"].append({
+                        "type": zombie_type,
+                        "row": int(row),
+                        "col": int(col)
+                    })
+        
+        # Parse SEEDS
+        seeds_match = re.search(r'SEEDS:\[(.*?)\]', game_state_text)
+        if seeds_match:
+            seeds_str = seeds_match.group(1)
+            if seeds_str:
+                seed_pattern = re.findall(r'\(([^,]+),([^)]+)\)', seeds_str)
+                for seed_type, status in seed_pattern:
+                    result["seeds"].append({
+                        "type": seed_type,
+                        "status": status
+                    })
+        
+        return result
+    
+    @staticmethod
+    def build_grid_from_game_state(game_state: Dict[str, Any]) -> List[List]:
+        """Build grid từ game_state (parsed dict hoặc có plants list)"""
+        grid = [[None for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
+        
+        plants = game_state.get("plants", [])
+        for plant in plants:
+            row = plant.get("row", 0)
+            col = plant.get("col", 0)
+            plant_type = plant.get("type", "unknown")
+            if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
+                grid[row][col] = plant_type
+        
+        return grid
     
     @staticmethod
     def validate_with_video(
@@ -36,8 +103,6 @@ class ActionValidator:
             }
         
         try:
-            grid = [[None for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
-            
             for i, action in enumerate(actions):
                 if not isinstance(action, dict):
                     errors.append(f"[{i}]: Action không phải dict")
@@ -53,15 +118,15 @@ class ActionValidator:
                     continue
                 
                 game_state = builder.detect_game_state(frame)
+                # Build grid từ game_state detect được
+                grid = ActionValidator.build_grid_from_game_state(game_state)
+                
                 action_error = ActionValidator._validate_action(
                     i, time_str, action_type, args, game_state, grid
                 )
                 
                 if action_error:
                     errors.append(action_error)
-                elif action_type == "plant":
-                    row, col = int(args.get("row", 0)), int(args.get("col", 0))
-                    grid[row][col] = args.get("plant_type")
                 
                 validated_samples.append({
                     "id": i + 1,
@@ -89,7 +154,7 @@ class ActionValidator:
     
     @staticmethod
     def validate_simple(actions: List[Dict[str, Any]]) -> Dict:
-        """Validate đơn giản không cần video"""
+        """Validate đơn giản không cần video - dùng cho sequential actions"""
         errors = []
         warnings = []
         grid = [[None for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
@@ -119,6 +184,59 @@ class ActionValidator:
             "total": total,
             "errors": errors,
             "warnings": warnings
+        }
+    
+    @staticmethod
+    def validate_training_data(samples: List[Dict[str, Any]]) -> Dict:
+        """
+        Validate training data format (game_state + action)
+        Mỗi sample độc lập - parse game_state để check action hợp lệ
+        """
+        errors = []
+        warnings = []
+        valid_samples = []
+        invalid_samples = []
+        
+        for i, sample in enumerate(samples):
+            if not isinstance(sample, dict):
+                errors.append(f"[{i}]: Sample không phải dict")
+                invalid_samples.append(sample)
+                continue
+            
+            game_state_text = sample.get("game_state", "")
+            action_type = sample.get("action")
+            args = sample.get("arguments", {}) or {}
+            
+            # Parse game_state text thành dict
+            parsed_state = ActionValidator.parse_game_state_text(game_state_text)
+            
+            # Build grid từ parsed state
+            grid = ActionValidator.build_grid_from_game_state(parsed_state)
+            
+            # Validate action với grid từ game_state
+            error = ActionValidator._validate_action(
+                i, f"sample_{i}", action_type, args, parsed_state, grid
+            )
+            
+            if error:
+                errors.append(error)
+                invalid_samples.append(sample)
+            else:
+                valid_samples.append(sample)
+        
+        total = len(samples)
+        score = ((total - len(errors)) / total * 100) if total > 0 else 0
+        
+        return {
+            "passed": score >= 100,
+            "score": score,
+            "total": total,
+            "valid_count": len(valid_samples),
+            "invalid_count": len(invalid_samples),
+            "errors": errors,
+            "warnings": warnings,
+            "valid_samples": valid_samples,
+            "invalid_samples": invalid_samples
         }
     
     @staticmethod
@@ -154,20 +272,23 @@ class ActionValidator:
             if not (0 <= col < GRID_COLS):
                 return f"[{idx}] time={time_str}: col={col} ngoài range 0-8"
             
+            # Check plant chồng từ grid (đã build từ game_state)
             if grid[row][col] is not None:
                 existing = grid[row][col]
+                # Cho phép wall_nut chồng lên wall_nut (repair)
                 if not (plant_type == "wall_nut" and existing == "wall_nut"):
                     return f"[{idx}] time={time_str}: Ô ({row},{col}) đã có {existing}"
             
             # Check seed ready nếu có game_state
             if game_state:
                 seeds = game_state.get("seeds", [])
-                seed_ready = any(
-                    s.get("type") == plant_type and s.get("status") == "ready"
-                    for s in seeds
-                )
-                if not seed_ready and seeds:
-                    return f"[{idx}] time={time_str}: Seed {plant_type} không ready"
+                if seeds:
+                    seed_ready = any(
+                        s.get("type") == plant_type and s.get("status") == "ready"
+                        for s in seeds
+                    )
+                    if not seed_ready:
+                        return f"[{idx}] time={time_str}: Seed {plant_type} không ready"
         
         return None
     
