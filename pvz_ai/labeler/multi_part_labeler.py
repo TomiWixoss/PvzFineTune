@@ -81,6 +81,11 @@ class MultiPartLabeler:
                 all_actions.extend(adjusted)
                 if "training_data" in result:
                     training_files.append(result["training_data"])
+            
+            # Save progress sau mỗi part
+            progress = {"done": i + 1, "total": len(parts), "actions": len(all_actions), "training_files": training_files}
+            Path(out_dir / "progress.json").write_text(json.dumps(progress, indent=2), encoding="utf-8")
+            print(f"💾 Saved progress: {i+1}/{len(parts)} parts")
         
         # Merge training
         merged_path = None
