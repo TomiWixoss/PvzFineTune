@@ -462,10 +462,12 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
     def _build_training_data(self, video_path: str, actions: list, output_dir: Path, training_path: str) -> Optional[str]:
         """
         Tự động build training data từ actions đã validate
-        Sử dụng VideoDatasetBuilder để tạo game_state + action pairs
+        1. Dùng VideoDatasetBuilder để tạo dataset với game_state
+        2. Dùng dataset_to_training để convert sang format Gemma
         """
         try:
             from .video_dataset_builder import VideoDatasetBuilder
+            from .dataset_to_training import convert_dataset
             
             # Tạo file actions tạm
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -482,14 +484,20 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
             
             self._save_json(builder_actions, str(actions_file))
             
-            # Build training data
+            # Build dataset (intermediate)
+            dataset_path = output_dir / f"dataset_temp_{timestamp}.json"
+            
             builder = VideoDatasetBuilder(video_path)
             if builder.load():
-                builder.process_actions_file(str(actions_file), training_path, save_frames=False)
+                builder.process_actions_file(str(actions_file), str(dataset_path), save_frames=False)
                 builder.close()
+                
+                # Convert sang format Gemma training
+                convert_dataset(str(dataset_path), training_path)
                 
                 # Xóa file tạm
                 actions_file.unlink()
+                dataset_path.unlink()
                 
                 print(f"✅ Training data: {training_path}")
                 return training_path
@@ -499,6 +507,8 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 
         except Exception as e:
             print(f"❌ Error building training data: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
 
