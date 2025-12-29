@@ -104,6 +104,22 @@ def validate_actions_with_video(
                             existing = grid[row][col]
                             if not (plant_type == "wall_nut" and existing == "wall_nut"):
                                 action_error = f"[{i}] time={time_str}: Ô ({row},{col}) đã có {existing}"
+                        else:
+                            # Check seed packet ready
+                            seeds = game_state.get("seeds", [])
+                            seed_ready = False
+                            seed_status = "not_found"
+                            
+                            for seed in seeds:
+                                if seed.get("type") == plant_type:
+                                    seed_status = seed.get("status", "unknown")
+                                    if seed_status == "ready":
+                                        seed_ready = True
+                                        break
+                            
+                            if not seed_ready and seeds:
+                                # Có seeds nhưng không ready
+                                action_error = f"[{i}] time={time_str}: Seed {plant_type} đang {seed_status}, không thể trồng"
                         
                         # Nếu OK, update grid
                         if action_error is None:
