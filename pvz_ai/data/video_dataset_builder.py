@@ -16,7 +16,7 @@ from ..core.constants import (
     DEFAULT_CONFIDENCE
 )
 from ..utils.time_utils import parse_time, format_time
-from ..utils.grid_utils import get_row, get_col
+from .game_state_detector import GameStateDetector
 
 
 class VideoDatasetBuilder:
@@ -28,6 +28,7 @@ class VideoDatasetBuilder:
         self.conf = conf or DEFAULT_CONFIDENCE
         
         self.detector = None
+        self.state_detector = None
         self.cap: Optional[cv2.VideoCapture] = None
         
         self.fps = 0
@@ -65,12 +66,16 @@ class VideoDatasetBuilder:
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.duration = self.total_frames / self.fps if self.fps > 0 else 0
         
+        # Auto-detect grid
         if self.height >= 1080:
             self.grid_rows_y = GRID_ROWS_Y_1080
             self.grid_cols_x = GRID_COLUMNS_X_1080
             print("  Grid: 1080p mode")
         else:
             print("  Grid: 800x600 mode")
+        
+        # Init state detector
+        self.state_detector = GameStateDetector(self.detector, self.grid_rows_y, self.grid_cols_x)
         
         print(f"✓ Video: {self.video_path.name}")
         print(f"  {self.width}x{self.height} | {self.fps:.1f} FPS | {format_time(self.duration)}")
@@ -81,7 +86,6 @@ class VideoDatasetBuilder:
         output_path = Path(output_path)
         self.output_dir = output_path.parent
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
         self.frames_dir = self.output_dir / "frames"
         self.frames_dir.mkdir(exist_ok=True)
     
@@ -100,61 +104,7 @@ class VideoDatasetBuilder:
     
     def detect_game_state(self, frame) -> Dict[str, Any]:
         """YOLO detect frame → game_state"""
-        grouped = self.detector.detect_grouped(frame, self.conf)
-        
-        zombies = grouped.get("zombie", [])
-        plants = grouped.get("pea_shooter", [])
-        seed_ready = grouped.get("pea_shooter_ready", [])
-        seed_cooldown = grouped.get("pea_shooter_cooldown", [])
-        
-        for z in zombies:
-            z["row"] = get_row(z["y"], self.grid_rows_y)
-            z["col"] = get_col(z["x"], self.grid_cols_x)
-            z["type"] = "zombie"
-        
-        for p in plants:
-            p["row"] = get_row(p["y"], self.grid_rows_y)
-            p["col"] = get_col(p["x"], self.grid_cols_x)
-            p["type"] = "pea_shooter"
-        
-        seeds = []
-        for s in seed_ready:
-            seeds.append({"type": "pea_shooter", "status": "ready", "x": s["x"], "y": s["y"], "conf": s["conf"]})
-        for s in seed_cooldown:
-            seeds.append({"type": "pea_shooter", "status": "cooldown", "x": s["x"], "y": s["y"], "conf": s["conf"]})
-        
-        text = self._build_state_text(plants, zombies, seeds)
-        
-        return {
-            "text": text,
-            "plants": plants,
-            "zombies": zombies,
-            "seeds": seeds
-        }
-    
-    def _build_state_text(self, plants: list, zombies: list, seeds: list) -> str:
-        """Build text representation cho Gemma"""
-        parts = []
-        
-        if plants:
-            plant_str = ",".join([f"({p.get('type','plant')},{p.get('row',0)},{p.get('col',0)})" for p in plants])
-            parts.append(f"PLANTS:[{plant_str}]")
-        else:
-            parts.append("PLANTS:[]")
-        
-        if zombies:
-            zombie_str = ",".join([f"({z.get('type','zombie')},{z.get('row',0)},{z.get('col',8)})" for z in zombies])
-            parts.append(f"ZOMBIES:[{zombie_str}]")
-        else:
-            parts.append("ZOMBIES:[]")
-        
-        if seeds:
-            seed_str = ",".join([f"({s.get('type','unknown')},{s.get('status','unknown')})" for s in seeds])
-            parts.append(f"SEEDS:[{seed_str}]")
-        else:
-            parts.append("SEEDS:[]")
-        
-        return ". ".join(parts)
+        return self.state_detector.detect(frame, self.conf)
     
     def process_actions_file(self, actions_path: str, output_path: str, save_frames: bool = True):
         """Đọc file actions → tạo dataset"""

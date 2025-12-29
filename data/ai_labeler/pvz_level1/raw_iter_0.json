@@ -1,0 +1,66 @@
+[
+  {
+    "time": "0:09.375",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    },
+    "note": "Planting first Peashooter in the middle lane."
+  },
+  {
+    "time": "0:12.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for enough sun to plant the next Peashooter."
+  },
+  {
+    "time": "0:19.167",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    },
+    "note": "Planting second Peashooter."
+  },
+  {
+    "time": "0:22.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for seed cooldown and sun."
+  },
+  {
+    "time": "0:31.250",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    },
+    "note": "Planting third Peashooter."
+  },
+  {
+    "time": "0:35.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for seed cooldown."
+  },
+  {
+    "time": "0:42.208",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    },
+    "note": "Planting fourth Peashooter."
+  },
+  {
+    "time": "0:45.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for the level to finish as waves are defeated."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "time": "0:09.375",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    },
+    "note": "Planting the first Peashooter in the middle row."
+  },
+  {
+    "time": "0:12.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for sun and seed cooldown."
+  },
+  {
+    "time": "0:19.167",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    },
+    "note": "Planting the second Peashooter."
+  },
+  {
+    "time": "0:22.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for seed cooldown."
+  },
+  {
+    "time": "0:42.208",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    },
+    "note": "Planting the third and final Peashooter."
+  },
+  {
+    "time": "0:45.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting for level completion."
+  }
+]

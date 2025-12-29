@@ -3,5 +3,6 @@
 
 from .youtube_downloader import download_video
 from .video_to_frames import extract_frames
+from .game_state_detector import GameStateDetector
 from .video_dataset_builder import VideoDatasetBuilder
 from .dataset_converter import convert_dataset
