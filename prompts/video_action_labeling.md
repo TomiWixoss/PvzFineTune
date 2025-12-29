@@ -4,51 +4,31 @@
 
 ---
 
-Bạn là chuyên gia phân tích gameplay Plants vs Zombies. Xem video frame-by-frame và ghi lại hành động.
+Bạn là chuyên gia phân tích gameplay Plants vs Zombies. Xem video frame-by-frame và ghi lại hành động TRỒNG CÂY của người chơi.
 
-## ⚠️ CRITICAL: TIMESTAMP PHẢI CHÍNH XÁC ĐẾN 0.5 GIÂY
+## ⚠️ LƯU Ý QUAN TRỌNG
 
-Sun chỉ hiển thị 1-2 giây rồi biến mất. Nếu timestamp sai 1 giây = data sai hoàn toàn.
+- **KHÔNG ghi action thu thập sun** - việc này do code rule tự động xử lý
+- **CHỈ ghi 2 loại action**: `plant` (trồng cây) và `wait` (chờ)
+- AI sẽ học cách quyết định KHI NÀO và Ở ĐÂU nên trồng cây
 
-### CÁCH XÁC ĐỊNH TIMESTAMP ĐÚNG:
+## 🎯 2 LOẠI ACTION:
 
-**Bước 1**: Pause video NGAY LÚC thấy sun/seed sáng
-**Bước 2**: Ghi timestamp HIỆN TẠI (không trừ, không cộng)
-**Bước 3**: Đó là timestamp cho action
+### 1. `plant` - Trồng cây
 
-```
-VÍ DỤ:
-- Pause lúc 0:12.5, thấy sun đang hiển thị → Ghi: "0:12" action: "collect_sun"
-- Pause lúc 0:18.0, thấy seed packet sáng → Ghi: "0:18" action: "plant_pea_shooter"
-```
+**KHI NÀO**: Người chơi click seed packet VÀ đặt cây xuống grid
+**THAM SỐ**:
 
-## 🎯 3 LOẠI ACTION:
-
-### 1. `collect_sun`
-
-**KHI NÀO**: Thấy sun (vàng tròn) ĐANG HIỂN THỊ trên màn hình
-**TIMESTAMP**: Lúc sun đang hiển thị rõ ràng (KHÔNG phải lúc click)
-
-```json
-{
-  "time": "0:12",
-  "action": "collect_sun",
-  "args": {},
-  "note": "sun visible center screen"
-}
-```
-
-### 2. `plant_pea_shooter`
-
-**KHI NÀO**: Seed packet SÁNG (có viền sáng, không xám)
-**TIMESTAMP**: Lúc seed đang sáng VÀ có đủ sun (50+)
+- `plant_type`: Loại cây (pea_shooter, sunflower, wall_nut, ...)
+- `row`: Hàng (0-4, 0=trên cùng)
+- `col`: Cột (0-8, 0=trái nhất)
 
 ```json
 {
   "time": "0:18",
-  "action": "plant_pea_shooter",
-  "args": { "row": 2, "col": 0 },
-  "note": "seed bright, 100 sun"
+  "action": "plant",
+  "args": { "plant_type": "pea_shooter", "row": 2, "col": 0 },
+  "note": "trồng pea_shooter hàng giữa, cột đầu"
 }
 ```
 
@@ -63,20 +43,30 @@ Row 4 (bottom) : [ ][ ][ ][ ][ ][ ][ ][ ][ ]
                  Col 0 → → → → → → → → Col 8
 ```
 
-### 3. `do_nothing`
+**PLANT TYPES** (phổ biến):
+
+- `pea_shooter` - Bắn đậu
+- `sunflower` - Hoa hướng dương
+- `wall_nut` - Hạt óc chó (chắn)
+- `cherry_bomb` - Bom cherry
+- `snow_pea` - Đậu băng
+- `repeater` - Bắn đậu đôi
+
+### 2. `wait` - Chờ
 
 **KHI NÀO**:
 
-- Không có sun trên màn hình
-- Seed packet XÁM (cooldown)
+- Seed packet đang cooldown (xám)
 - Không đủ sun để trồng
+- Đang chờ zombie xuất hiện
+- Không cần trồng thêm
 
 ```json
 {
   "time": "0:25",
-  "action": "do_nothing",
+  "action": "wait",
   "args": {},
-  "note": "no sun, seed cooldown"
+  "note": "seed cooldown, chờ"
 }
 ```
 
@@ -84,45 +74,38 @@ Row 4 (bottom) : [ ][ ][ ][ ][ ][ ][ ][ ][ ]
 
 ```
 1. Play video với tốc độ 0.5x hoặc 0.25x
-2. Mỗi khi thấy SUN xuất hiện:
+
+2. Mỗi khi thấy NGƯỜI CHƠI TRỒNG CÂY:
    - Pause ngay
    - Ghi timestamp
-   - Action: collect_sun
+   - Xác định loại cây (plant_type)
+   - Xác định vị trí (row, col)
+   - Action: plant
 
-3. Mỗi khi thấy SEED SÁNG LÊN:
-   - Pause ngay
-   - Ghi timestamp
-   - Xem người chơi trồng ở đâu (row, col)
-   - Action: plant_pea_shooter
-
-4. Mỗi 3-5 giây không có gì:
-   - Ghi do_nothing
+3. Mỗi 3-5 giây không trồng gì:
+   - Ghi wait
+   - Note lý do (cooldown, chờ sun, ...)
 ```
 
 ## ✅ VALIDATION CHECKLIST:
 
-Trước khi submit, kiểm tra TỪNG action:
-
-| Action              | Điều kiện BẮT BUỘC                             |
-| ------------------- | ---------------------------------------------- |
-| `collect_sun`       | Sun PHẢI đang hiển thị tại timestamp đó        |
-| `plant_pea_shooter` | Seed PHẢI sáng + đủ sun (50+) tại timestamp đó |
-| `do_nothing`        | KHÔNG có sun + seed xám HOẶC không đủ sun      |
+| Action  | Điều kiện BẮT BUỘC                                  |
+| ------- | --------------------------------------------------- |
+| `plant` | Người chơi THỰC SỰ trồng cây tại timestamp đó       |
+| `wait`  | Không có hành động trồng cây trong khoảng thời gian |
 
 ## ❌ LỖI THƯỜNG GẶP:
 
 ```json
-// ❌ SAI: Ghi timestamp sau khi sun biến mất
+// ❌ SAI: Ghi collect_sun (không dùng nữa!)
 {"time": "0:15", "action": "collect_sun"}
-// Sun xuất hiện 0:12-0:14, biến mất 0:14 → timestamp 0:15 = KHÔNG CÓ SUN
 
-// ❌ SAI: Ghi plant khi seed xám
-{"time": "0:20", "action": "plant_pea_shooter", "args": {"row": 2, "col": 1}}
-// Seed cooldown từ 0:18-0:25 → timestamp 0:20 = SEED XÁM
+// ❌ SAI: Thiếu plant_type
+{"time": "0:20", "action": "plant", "args": {"row": 2, "col": 1}}
 
-// ❌ SAI: Timestamp làm tròn quá nhiều
-{"time": "0:10", "action": "collect_sun"}
-// Sun xuất hiện 0:12.3 → ghi 0:10 = SAI 2 giây
+// ❌ SAI: Ghi plant khi chưa thực sự trồng
+{"time": "0:20", "action": "plant", "args": {"plant_type": "pea_shooter", "row": 2, "col": 1}}
+// Người chơi chỉ click seed nhưng chưa đặt xuống
 ```
 
 ## ✅ VÍ DỤ ĐÚNG:
@@ -131,83 +114,52 @@ Trước khi submit, kiểm tra TỪNG action:
 [
   {
     "time": "0:05",
-    "action": "do_nothing",
+    "action": "wait",
     "args": {},
-    "note": "game starting, no sun yet"
+    "note": "game starting, chờ đủ sun"
   },
   {
-    "time": "0:08",
-    "action": "plant_pea_shooter",
-    "args": { "row": 2, "col": 0 },
-    "note": "first seed ready, 50 sun"
+    "time": "0:09",
+    "action": "plant",
+    "args": { "plant_type": "pea_shooter", "row": 2, "col": 0 },
+    "note": "trồng pea_shooter đầu tiên"
   },
   {
-    "time": "0:12",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun falling from sky, visible now"
-  },
-  {
-    "time": "0:16",
-    "action": "do_nothing",
-    "args": {},
-    "note": "seed cooldown, waiting"
-  },
-  {
-    "time": "0:19",
-    "action": "collect_sun",
-    "args": {},
-    "note": "another sun visible"
-  },
-  {
-    "time": "0:22",
-    "action": "plant_pea_shooter",
-    "args": { "row": 2, "col": 1 },
-    "note": "seed ready again, 100 sun"
-  },
-  {
-    "time": "0:26",
-    "action": "do_nothing",
+    "time": "0:15",
+    "action": "wait",
     "args": {},
     "note": "seed cooldown"
   },
   {
+    "time": "0:22",
+    "action": "plant",
+    "args": { "plant_type": "pea_shooter", "row": 2, "col": 1 },
+    "note": "trồng thêm pea_shooter"
+  },
+  {
     "time": "0:30",
-    "action": "collect_sun",
+    "action": "wait",
     "args": {},
-    "note": "sun from sunflower"
-  },
-  {
-    "time": "0:34",
-    "action": "do_nothing",
-    "args": {},
-    "note": "waiting for sun"
-  },
-  {
-    "time": "0:38",
-    "action": "collect_sun",
-    "args": {},
-    "note": "falling sun visible"
+    "note": "chờ sun"
   },
   {
     "time": "0:41",
-    "action": "plant_pea_shooter",
-    "args": { "row": 2, "col": 2 },
-    "note": "seed ready, planting 3rd"
-  },
-  {
-    "time": "0:45",
-    "action": "do_nothing",
-    "args": {},
-    "note": "defending, seed cooldown"
+    "action": "plant",
+    "args": { "plant_type": "pea_shooter", "row": 1, "col": 0 },
+    "note": "zombie xuất hiện row 1, trồng phòng thủ"
   },
   {
     "time": "0:50",
-    "action": "collect_sun",
+    "action": "wait",
     "args": {},
-    "note": "sun visible"
+    "note": "đang phòng thủ tốt"
   },
-  { "time": "0:55", "action": "do_nothing", "args": {}, "note": "level ending" }
+  {
+    "time": "0:58",
+    "action": "plant",
+    "args": { "plant_type": "wall_nut", "row": 2, "col": 3 },
+    "note": "đặt wall_nut chắn zombie"
+  }
 ]
 ```
 
@@ -217,9 +169,9 @@ Trước khi submit, kiểm tra TỪNG action:
 [
   {
     "time": "M:SS",
-    "action": "ACTION_TYPE",
-    "args": {},
-    "note": "why this action"
+    "action": "plant | wait",
+    "args": { "plant_type": "...", "row": N, "col": N },
+    "note": "lý do action"
   }
 ]
 ```
@@ -232,7 +184,7 @@ Trước khi submit, kiểm tra TỪNG action:
 
 ⚠️ Nhớ:
 
-1. **Pause video** khi thấy sun/seed sáng
-2. **Ghi timestamp chính xác** tại thời điểm pause
-3. **Validate** mỗi action trước khi thêm vào list
-4. Sun chỉ hiển thị 1-2 giây - timing rất quan trọng!
+1. **CHỈ ghi `plant` và `wait`** - KHÔNG ghi collect_sun
+2. **`plant` phải có đủ**: plant_type, row, col
+3. **Ghi timestamp chính xác** khi người chơi đặt cây xuống
+4. **Note** lý do để hiểu context (zombie ở đâu, tại sao trồng vị trí đó)

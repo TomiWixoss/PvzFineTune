@@ -1,113 +1,68 @@
 [
   {
     "time": "0:05",
-    "action": "do_nothing",
+    "action": "wait",
     "args": {},
-    "note": "game starting, no sun yet"
+    "note": "Game bắt đầu, chờ đủ 100 sun để trồng cây đầu tiên"
   },
   {
     "time": "0:09.0",
-    "action": "plant_pea_shooter",
-    "args": { "row": 2, "col": 0 },
-    "note": "first seed ready, 150 sun"
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    },
+    "note": "Trồng pea_shooter đầu tiên ở hàng giữa để bắt đầu phòng thủ"
   },
   {
-    "time": "0:12.2",
-    "action": "collect_sun",
+    "time": "0:14.0",
+    "action": "wait",
     "args": {},
-    "note": "sun fully visible"
+    "note": "Seed packet đang trong thời gian hồi chiêu (cooldown)"
   },
   {
-    "time": "0:15.0",
-    "action": "do_nothing",
-    "args": {},
-    "note": "seed in cooldown"
-  },
-  {
-    "time": "0:17.5",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun visible"
-  },
-  {
-    "time": "0:22.0",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun visible"
+    "time": "0:19.0",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    },
+    "note": "Trồng pea_shooter thứ hai ngay khi vừa hồi chiêu để tăng hỏa lực"
   },
   {
     "time": "0:25.0",
-    "action": "do_nothing",
+    "action": "wait",
     "args": {},
-    "note": "no sun, seed cooldown"
+    "note": "Chờ seed packet hồi chiêu và tích lũy thêm sun"
   },
   {
-    "time": "0:27.8",
-    "action": "collect_sun",
+    "time": "0:32.0",
+    "action": "wait",
     "args": {},
-    "note": "falling sun visible"
-  },
-  { "time": "0:31.0", "action": "do_nothing", "args": {}, "note": "waiting" },
-  {
-    "time": "0:34.8",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun appears clearly"
-  },
-  {
-    "time": "0:38.0",
-    "action": "do_nothing",
-    "args": {},
-    "note": "no sun, seed cooldown"
-  },
-  {
-    "time": "0:40.5",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun visible"
+    "note": "Zombie đang tiến vào, hỏa lực hiện tại vẫn đang ổn định"
   },
   {
     "time": "0:41.9",
-    "action": "plant_pea_shooter",
-    "args": { "row": 2, "col": 2 },
-    "note": "seed packet bright, 100 sun"
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    },
+    "note": "Trồng pea_shooter thứ ba để tối ưu hóa khả năng tiêu diệt zombie nhanh"
   },
   {
-    "time": "0:45.0",
-    "action": "do_nothing",
+    "time": "0:50.0",
+    "action": "wait",
     "args": {},
-    "note": "seed cooldown"
-  },
-  {
-    "time": "0:46.8",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun is clearly visible"
-  },
-  { "time": "0:50.0", "action": "do_nothing", "args": {}, "note": "waiting" },
-  {
-    "time": "0:53.5",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun visible"
-  },
-  {
-    "time": "0:55.0",
-    "action": "do_nothing",
-    "args": {},
-    "note": "insufficient sun to plant"
-  },
-  { "time": "0:57.0", "action": "do_nothing", "args": {}, "note": "defending" },
-  {
-    "time": "0:58.2",
-    "action": "collect_sun",
-    "args": {},
-    "note": "sun becomes visible"
+    "note": "Đã đủ 3 cây ở lane giữa, chờ tiêu diệt đợt zombie cuối cùng"
   },
   {
     "time": "1:00.0",
-    "action": "do_nothing",
+    "action": "wait",
     "args": {},
-    "note": "level ending"
+    "note": "Màn chơi kết thúc, người chơi nhận được seed packet Sunflower"
   }
 ]

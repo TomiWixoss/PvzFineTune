@@ -80,7 +80,7 @@ class VideoDatasetBuilder:
     Output: dataset với game_state (từ YOLO detection) + action
     """
     
-    ACTION_TYPES = ["collect_sun", "plant_pea_shooter", "do_nothing"]
+    ACTION_TYPES = ["plant", "wait"]
     
     def __init__(self, video_path: str, model_path: str = None, conf: float = None):
         self.video_path = Path(video_path)
@@ -222,38 +222,42 @@ class VideoDatasetBuilder:
         
         Returns:
             {
-                "text": "HAS_SUN x=300 y=150. HAS_ZOMBIE row=2. CAN_PLANT",
-                "suns": [{"x": 300, "y": 150, "conf": 0.95}],
-                "zombies": [{"x": 600, "y": 260, "conf": 0.88, "row": 2}],
-                "plants": [{"x": 100, "y": 260, "conf": 0.92, "row": 2, "col": 0}],
+                "text": "PLANTS: [(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES: 3 at rows [1,2,2]. CAN_PLANT",
+                "plants": [{"type": "pea_shooter", "row": 2, "col": 0, "x": 100, "y": 260, "conf": 0.92}, ...],
+                "zombies": [{"row": 2, "col": 7, "x": 600, "y": 260, "conf": 0.88}, ...],
+                "zombie_count": 3,
                 "seed_ready": [...],
                 "can_plant": True
             }
         """
         grouped = self.detector.detect_grouped(frame, self.conf)
         
-        suns = grouped.get("sun", [])
         zombies = grouped.get("zombie", [])
         plants = grouped.get("pea_shooter", [])
         seed_ready = grouped.get("pea_shooter_ready", [])
         
-        # Add row/col info
+        # Add row/col/type info to zombies
         for z in zombies:
             z["row"] = self._get_row(z["y"])
+            z["col"] = self._get_col(z["x"])
+            z["type"] = "zombie"  # TODO: detect zombie type from YOLO (zombie, cone_zombie, bucket_zombie, ...)
+        
+        # Add row/col/type info to plants
         for p in plants:
             p["row"] = self._get_row(p["y"])
             p["col"] = self._get_col(p["x"])
+            p["type"] = "pea_shooter"  # TODO: detect plant type from YOLO
         
         can_plant = len(seed_ready) > 0
         
         # Build text representation (for Gemma training)
-        text = self._build_state_text(suns, zombies, can_plant)
+        text = self._build_state_text(plants, zombies, can_plant)
         
         return {
             "text": text,
-            "suns": suns,
-            "zombies": zombies,
             "plants": plants,
+            "zombies": zombies,
+            "zombie_count": len(zombies),
             "seed_ready": seed_ready,
             "can_plant": can_plant
         }
@@ -280,24 +284,30 @@ class VideoDatasetBuilder:
                 col = i
         return col
     
-    def _build_state_text(self, suns: list, zombies: list, can_plant: bool) -> str:
-        """Build text representation cho Gemma"""
-        # Sun
-        if suns:
-            sun_str = f"HAS_SUN x={suns[0]['x']} y={suns[0]['y']}"
-        else:
-            sun_str = "NO_SUN"
+    def _build_state_text(self, plants: list, zombies: list, can_plant: bool) -> str:
+        """Build text representation cho Gemma - bao gồm plants đã trồng và zombies"""
+        parts = []
         
-        # Zombie
-        if zombies:
-            zombie_str = f"HAS_ZOMBIE row={zombies[0].get('row', 0)}"
+        # Plants info: (type,row,col) cho mỗi plant
+        if plants:
+            plant_positions = [(p.get("type", "plant"), p.get("row", 0), p.get("col", 0)) for p in plants]
+            plant_str = ",".join([f"({t},{r},{c})" for t, r, c in plant_positions])
+            parts.append(f"PLANTS:[{plant_str}]")
         else:
-            zombie_str = "NO_ZOMBIE"
+            parts.append("PLANTS:[]")
+        
+        # Zombies info: (type,row,col) cho mỗi zombie - giống format plant
+        if zombies:
+            zombie_positions = [(z.get("type", "zombie"), z.get("row", 0), z.get("col", 8)) for z in zombies]
+            zombie_str = ",".join([f"({t},{r},{c})" for t, r, c in zombie_positions])
+            parts.append(f"ZOMBIES:[{zombie_str}]")
+        else:
+            parts.append("ZOMBIES:[]")
         
         # Plant ability
-        plant_str = "CAN_PLANT" if can_plant else "CANNOT_PLANT"
+        parts.append("CAN_PLANT" if can_plant else "CANNOT_PLANT")
         
-        return f"{sun_str}. {zombie_str}. {plant_str}"
+        return ". ".join(parts)
     
     # =========================================
     # DATASET BUILDING
@@ -338,7 +348,7 @@ class VideoDatasetBuilder:
             # Detect → game_state
             game_state = self.detect_game_state(frame)
             print(f"  State: {game_state['text']}")
-            print(f"  Suns: {len(game_state['suns'])} | Zombies: {len(game_state['zombies'])} | Plants: {len(game_state['plants'])}")
+            print(f"  Plants: {len(game_state['plants'])} | Zombies: {game_state['zombie_count']}")
             
             # Save frame
             frame_filename = None
@@ -462,25 +472,21 @@ class VideoDatasetBuilder:
                 # Add action
                 paused = True
                 print(f"\n--- Add action at {self._format_time(seconds)} ---")
-                print("Action types: 1=collect_sun, 2=plant_pea_shooter, 3=do_nothing")
+                print("Action types: 1=plant, 2=wait")
                 
                 try:
-                    choice = input("Choose action (1/2/3): ").strip()
+                    choice = input("Choose action (1/2): ").strip()
                     action_type = {
-                        "1": "collect_sun",
-                        "2": "plant_pea_shooter",
-                        "3": "do_nothing"
-                    }.get(choice, "do_nothing")
+                        "1": "plant",
+                        "2": "wait"
+                    }.get(choice, "wait")
                     
                     args = {}
-                    if action_type == "collect_sun":
-                        x = input("  x (or Enter to skip): ").strip()
-                        y = input("  y (or Enter to skip): ").strip()
-                        if x: args["x"] = int(x)
-                        if y: args["y"] = int(y)
-                    elif action_type == "plant_pea_shooter":
+                    if action_type == "plant":
+                        plant_type = input("  plant_type (pea_shooter/sunflower/wall_nut): ").strip() or "pea_shooter"
                         row = input("  row (0-4): ").strip()
                         col = input("  col (0-8): ").strip()
+                        args["plant_type"] = plant_type
                         if row: args["row"] = int(row)
                         if col: args["col"] = int(col)
                     

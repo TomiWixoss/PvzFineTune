@@ -23,13 +23,14 @@ def convert_dataset(input_path: str, output_path: str = None):
         "samples": [
             {
                 "game_state": {
-                    "text": "HAS_SUN x=524 y=169. NO_ZOMBIE. CANNOT_PLANT",
-                    "suns": [...],
+                    "text": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:2 at [(1,7),(2,6)]. CAN_PLANT",
+                    "plants": [...],
+                    "zombies": [...],
                     ...
                 },
                 "action": {
-                    "type": "collect_sun",
-                    "args": {}
+                    "type": "plant",
+                    "args": {"plant_type": "pea_shooter", "row": 1, "col": 0}
                 }
             }
         ]
@@ -38,9 +39,9 @@ def convert_dataset(input_path: str, output_path: str = None):
     Output format (cho Gemma training):
     [
         {
-            "game_state": "HAS_SUN x=524 y=169. NO_ZOMBIE. CANNOT_PLANT",
-            "action": "collect_sun",
-            "arguments": {"x": 524, "y": 169}
+            "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:2 at [(1,7),(2,6)]. CAN_PLANT",
+            "action": "plant",
+            "arguments": {"plant_type": "pea_shooter", "row": 1, "col": 0}
         }
     ]
     """
@@ -59,7 +60,7 @@ def convert_dataset(input_path: str, output_path: str = None):
     
     # Convert
     training_data = []
-    stats = {"collect_sun": 0, "plant_pea_shooter": 0, "do_nothing": 0}
+    stats = {"plant": 0, "wait": 0}
     
     for sample in samples:
         game_state = sample.get("game_state", {})
@@ -68,7 +69,7 @@ def convert_dataset(input_path: str, output_path: str = None):
         if not action:
             continue
         
-        action_type = action.get("type", "do_nothing")
+        action_type = action.get("type", "wait")
         action_args = action.get("args", {})
         
         # Build training sample
@@ -79,24 +80,15 @@ def convert_dataset(input_path: str, output_path: str = None):
         }
         
         # Add arguments based on action type
-        if action_type == "collect_sun":
-            # Lấy x, y từ game_state.suns nếu có
-            suns = game_state.get("suns", [])
-            if suns:
-                training_sample["arguments"] = {
-                    "x": suns[0].get("x", 0),
-                    "y": suns[0].get("y", 0)
-                }
-            elif action_args:
-                training_sample["arguments"] = action_args
-        
-        elif action_type == "plant_pea_shooter":
-            # Lấy row, col từ action args
+        if action_type == "plant":
+            # Lấy plant_type, row, col từ action args
             if action_args:
                 training_sample["arguments"] = {
+                    "plant_type": action_args.get("plant_type", "pea_shooter"),
                     "row": action_args.get("row", 2),
                     "col": action_args.get("col", 0)
                 }
+        # wait không cần arguments
         
         training_data.append(training_sample)
         stats[action_type] = stats.get(action_type, 0) + 1
