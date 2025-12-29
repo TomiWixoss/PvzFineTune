@@ -1,6 +1,6 @@
-description: Ultralytics YOLO11n model trained on /content/PvZ-Bot-Vision-NEW-2/data.yaml
+description: Ultralytics YOLO11n model trained on /content/PvZ-Bot-Vision-NEW-6/data.yaml
 author: Ultralytics
-date: '2025-12-28T15:53:12.009816'
+date: '2025-12-29T14:52:34.883812'
 version: 8.3.241
 license: AGPL-3.0 License (https://ultralytics.com/license)
 docs: https://docs.ultralytics.com
@@ -11,12 +11,16 @@ imgsz:
 - 640
 - 640
 names:
-  0: pea_shooter
-  1: pea_shooter_cooldown
-  2: pea_shooter_ready
-  3: sun
-  4: sunflower_reward
-  5: zombie
+  0: cherry_bomb_reward
+  1: pea_shooter
+  2: pea_shooter_cooldown
+  3: pea_shooter_ready
+  4: sun
+  5: sunflower
+  6: sunflower_cooldown
+  7: sunflower_ready
+  8: sunflower_reward
+  9: zombie
 args:
   batch: 1
   fraction: 1.0
