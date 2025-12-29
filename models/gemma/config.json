@@ -8,7 +8,7 @@
   "attn_logit_softcapping": null,
   "bos_token_id": 2,
   "dtype": "float32",
-  "eos_token_id": 1,
+  "eos_token_id": 106,
   "final_logit_softcapping": null,
   "head_dim": 256,
   "hidden_activation": "gelu_pytorch_tanh",
@@ -48,6 +48,8 @@
   "rope_theta": 1000000.0,
   "sliding_window": 512,
   "transformers_version": "4.57.3",
+  "unsloth_fixed": true,
+  "unsloth_version": "2025.12.9",
   "use_bidirectional_attention": false,
   "use_cache": true,
   "vocab_size": 262144

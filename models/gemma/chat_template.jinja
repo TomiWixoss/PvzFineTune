@@ -139,6 +139,9 @@ declaration:{{- tool_data['function']['name'] -}}
             {%- endfor -%}
         {%- endif -%}
         {%- set loop_messages = messages[1:] -%}
+    {%- else -%}
+        {{- 'You are a model that can do function calling with the following functions' -}}
+        {%- set loop_messages = messages -%}
     {%- endif -%}
     {%- if tools -%}
         {%- for tool in tools %}

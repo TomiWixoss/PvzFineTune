@@ -9,7 +9,7 @@
   },
   "eoi_token": "<end_of_image>",
   "eos_token": {
-    "content": "<eos>",
+    "content": "<end_of_turn>",
     "lstrip": false,
     "normalized": false,
     "rstrip": false,
