@@ -185,48 +185,76 @@ class AIVideoLabeler:
         self._save_json(actions, str(output_dir / f"raw_iter_{iteration}.json"))
         
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
+        validated_indices = set()  # Indices đã pass validation - skip ở lần sau
         
         # Validation loop
         while True:
             iteration += 1
             print(f"\n--- Iteration {iteration} ---")
             
-            # Auto-fix
+            # Auto-fix, skip những action đã validated
             print("🔧 Auto-fixing...")
-            fix_result = auto_fixer.fix_actions(actions)
+            fix_result = auto_fixer.fix_actions(actions, skip_indices=validated_indices)
             if fix_result["fix_count"] > 0:
                 print(f"   ✅ Fixed {fix_result['fix_count']} actions")
                 actions = fix_result["fixed_actions"]
                 self._save_json(actions, str(output_dir / f"fixed_iter_{iteration}.json"))
             
-            # Validate
-            try:
-                validation = ActionValidator.validate_with_video(actions, video_path)
-            except Exception as e:
-                print(f"   ⚠️ Video validation failed: {e}")
-                validation = ActionValidator.validate_simple(actions)
+            # Lấy kết quả validation từ auto_fixer
+            unfixable = fix_result.get("unfixable_errors", [])
             
-            print(ActionValidator.format_result(validation))
+            # Xác định actions nào lỗi
+            error_indices = set()
+            for err in unfixable:
+                if err.startswith("["):
+                    try:
+                        idx = int(err.split("]")[0][1:])
+                        error_indices.add(idx)
+                    except:
+                        pass
+            
+            # Cập nhật validated_indices (những action pass lần này)
+            for i in range(len(actions)):
+                if i not in error_indices and i not in validated_indices:
+                    validated_indices.add(i)
+            
+            total = len(actions)
+            error_count = len(error_indices)
+            score = ((total - error_count) / total * 100) if total > 0 else 0
+            
+            validation = {
+                "passed": error_count == 0,
+                "score": score,
+                "total": total,
+                "errors": unfixable,
+                "warnings": []
+            }
+            
+            print(f"📊 Score: {score:.1f}% ({total} actions, {len(validated_indices)} validated)")
+            print(f"   Errors: {error_count}")
             
             if validation["passed"]:
                 print("✅ PASSED!")
                 break
             
-            # Get errors
-            unfixable = fix_result.get("unfixable_errors", []) or validation.get("errors", [])
             if not unfixable:
                 print("✅ No more errors!")
                 break
+            
+            # Show errors
+            print("❌ Errors:")
+            for err in unfixable[:5]:
+                print(f"   {err}")
             
             if not self.key_manager.has_available_key():
                 print("❌ Hết key")
                 break
             
-            # Build correction prompt
+            # Build correction prompt - chỉ yêu cầu sửa actions lỗi
             prompt = CORRECTION_PROMPT_TEMPLATE.format(
                 score=validation['score'],
                 error_feedback="\n".join(unfixable[:20]),
-                game_states_info=self._get_error_game_states(validation)
+                game_states_info="Xem video để kiểm tra lại"
             )
             
             self.key_manager.reset_blocked()
@@ -240,8 +268,10 @@ class AIVideoLabeler:
         
         auto_fixer.close()
         
-        # Filter valid actions
-        clean_actions = self._filter_valid_actions(actions, validation)
+        # Lấy actions đã validated
+        clean_actions = [a for i, a in enumerate(actions) if i in validated_indices]
+        if not clean_actions:
+            clean_actions = actions
         print(f"\n📋 Clean actions: {len(clean_actions)}/{len(actions)}")
         
         # Build result

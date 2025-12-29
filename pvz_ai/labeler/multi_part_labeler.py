@@ -87,10 +87,11 @@ class MultiPartLabeler:
             Path(out_dir / "progress.json").write_text(json.dumps(progress, indent=2), encoding="utf-8")
             print(f"💾 Saved progress: {i+1}/{len(parts)} parts")
         
-        # Merge training
+        # Merge training - tạo file mới với timestamp hiện tại
         merged_path = None
         if training_files:
-            merged_path = str(out_dir / f"training_data_{ts}.json")
+            merge_ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            merged_path = str(out_dir / f"training_data_merged_{merge_ts}.json")
             self.merge_training(training_files, merged_path)
         
         passed = sum(1 for r in results if r["validation"]["passed"])
@@ -102,7 +103,8 @@ class MultiPartLabeler:
             "training_data": merged_path,
         }
         
-        Path(out_dir / f"combined_{ts}.json").write_text(
+        combined_ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        Path(out_dir / f"combined_{combined_ts}.json").write_text(
             json.dumps(combined, indent=2, ensure_ascii=False), encoding="utf-8"
         )
         
