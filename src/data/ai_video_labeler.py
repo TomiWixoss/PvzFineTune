@@ -179,7 +179,10 @@ class AIVideoLabeler:
             except json.JSONDecodeError as e:
                 print(f"❌ JSON parse error: {e}")
                 print(f"   Raw: {full_text[:200]}...")
-                return []
+                print("   → Rotating key and retrying...")
+                if not self.key_manager.rotate_key():
+                    break
+                continue
             
             except KeyboardInterrupt:
                 print("\n⚠️ Interrupted by user")
