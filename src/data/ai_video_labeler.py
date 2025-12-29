@@ -395,13 +395,14 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 2. Dựa vào game_state ở trên để hiểu:
    - PLANTS: cây đã trồng ở đâu (không được trồng chồng)
    - SEEDS: seed packet nào ready/cooldown
-3. Sửa các lỗi:
+3. **LƯU Ý**: Có thể bạn đã ghi THỪA action (video chỉ trồng 3 cây mà bạn ghi 4). Hãy xem lại và XÓA action không có thật.
+4. Sửa các lỗi:
    - Không trồng chồng lên ô đã có cây
    - row trong range 0-4, col trong range 0-8
    - CHỈ plant khi seed packet READY (không cooldown)
    - Timestamp phải chính xác khi cây THỰC SỰ được đặt xuống
-4. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
-5. Trả về JSON array đã sửa
+5. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
+6. Trả về JSON array đã sửa
 """
             # Reset blocked keys for retry
             self.key_manager.reset_blocked()
