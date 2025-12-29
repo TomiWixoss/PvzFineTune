@@ -185,16 +185,15 @@ class AIVideoLabeler:
         self._save_json(actions, str(output_dir / f"raw_iter_{iteration}.json"))
         
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
-        validated_actions = {}  # {index: action} - lưu actions đã pass validation
         
         # Validation loop
         while True:
             iteration += 1
             print(f"\n--- Iteration {iteration} ---")
             
-            # Auto-fix, skip những action đã validated
+            # Auto-fix
             print("🔧 Auto-fixing...")
-            fix_result = auto_fixer.fix_actions(actions, skip_indices=set(validated_actions.keys()))
+            fix_result = auto_fixer.fix_actions(actions)
             if fix_result["fix_count"] > 0:
                 print(f"   ✅ Fixed {fix_result['fix_count']} actions")
                 actions = fix_result["fixed_actions"]
@@ -202,24 +201,8 @@ class AIVideoLabeler:
             
             # Lấy kết quả validation từ auto_fixer
             unfixable = fix_result.get("unfixable_errors", [])
-            
-            # Xác định actions nào lỗi
-            error_indices = set()
-            for err in unfixable:
-                if err.startswith("["):
-                    try:
-                        idx = int(err.split("]")[0][1:])
-                        error_indices.add(idx)
-                    except:
-                        pass
-            
-            # Lưu actions đã pass vào validated_actions
-            for i, action in enumerate(actions):
-                if i not in error_indices and i not in validated_actions:
-                    validated_actions[i] = action.copy()
-            
             total = len(actions)
-            error_count = len(error_indices)
+            error_count = len(unfixable)
             score = ((total - error_count) / total * 100) if total > 0 else 0
             
             validation = {
@@ -230,7 +213,7 @@ class AIVideoLabeler:
                 "warnings": []
             }
             
-            print(f"📊 Score: {score:.1f}% ({total} actions, {len(validated_actions)} validated)")
+            print(f"📊 Score: {score:.1f}% ({total} actions)")
             print(f"   Errors: {error_count}")
             
             if validation["passed"]:
@@ -263,39 +246,14 @@ class AIVideoLabeler:
             if not new_actions:
                 break
             
-            # Rebuild actions: giữ validated, thay/xóa error actions
-            rebuilt_actions = []
-            new_validated = {}  # Rebuild với index mới
-            new_idx = 0
-            
-            for i, action in enumerate(actions):
-                if i in validated_actions:
-                    # Giữ nguyên action đã validated, cập nhật index mới
-                    new_validated[len(rebuilt_actions)] = validated_actions[i]
-                    rebuilt_actions.append(validated_actions[i])
-                elif i in error_indices:
-                    # Thay bằng action mới từ AI (nếu có)
-                    if new_idx < len(new_actions):
-                        rebuilt_actions.append(new_actions[new_idx])
-                        new_idx += 1
-                    # Nếu AI bỏ luôn (không có action mới) thì skip
-                else:
-                    rebuilt_actions.append(action)
-            
-            # Nếu AI trả về nhiều hơn số error, thêm vào cuối
-            while new_idx < len(new_actions):
-                rebuilt_actions.append(new_actions[new_idx])
-                new_idx += 1
-            
-            actions = rebuilt_actions
-            validated_actions = new_validated
-            
+            actions = new_actions
             self._save_json(actions, str(output_dir / f"raw_iter_{iteration}.json"))
         
         auto_fixer.close()
         
-        # Lấy actions đã validated (theo thứ tự index)
-        clean_actions = [validated_actions[i] for i in sorted(validated_actions.keys())]
+        # Filter valid actions
+        clean_actions = [a for i, a in enumerate(actions) 
+                        if not any(f"[{i}]" in err for err in validation.get("errors", []))]
         if not clean_actions:
             clean_actions = actions
         print(f"\n📋 Clean actions: {len(clean_actions)}/{len(actions)}")

@@ -72,14 +72,8 @@ class ActionAutoFixer:
         
         return None
     
-    def fix_actions(self, actions: List[Dict[str, Any]], skip_indices: set = None) -> Dict:
-        """
-        Fix actions tự động
-        
-        Args:
-            actions: List of actions
-            skip_indices: Set of indices to skip (đã validated trước đó)
-        """
+    def fix_actions(self, actions: List[Dict[str, Any]]) -> Dict:
+        """Fix actions tự động"""
         if not self._ensure_loaded():
             return {
                 "fixed_actions": actions,
@@ -88,7 +82,6 @@ class ActionAutoFixer:
                 "all_passed": False
             }
         
-        skip_indices = skip_indices or set()
         fixed_actions = []
         unfixable_errors = []
         fix_count = 0
@@ -106,15 +99,6 @@ class ActionAutoFixer:
             
             fixed_action = dict(action)
             action_error = None
-            
-            # Skip nếu đã validated và chỉ update grid
-            if i in skip_indices:
-                if action_type == "plant":
-                    row, col = int(args.get("row", 0)), int(args.get("col", 0))
-                    if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
-                        grid[row][col] = args.get("plant_type")
-                fixed_actions.append(fixed_action)
-                continue
             
             if action_type == "plant":
                 plant_type = args.get("plant_type")
