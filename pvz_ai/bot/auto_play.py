@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Auto Play Bot - AI-driven với OpenVINO
-Tối ưu: Chỉ gọi AI khi seed ready + game state thay đổi
+Priority: AI action > Sun collection
 """
 
 import cv2
 import time
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 from ..core.config import Config
-from ..core.constants import TARGET_FPS
+from ..core.constants import TARGET_FPS, SUN_CLICK_DELAY
 from ..utils.window_capture import WindowCapture
 from ..utils.grid_utils import get_row, get_col
 from ..inference.yolo_detector import YOLODetector
@@ -20,19 +20,11 @@ from .controller import GameController
 class AutoPlayBot:
     """Main auto-play bot - AI driven"""
     
-    # Tối ưu: Chỉ gọi AI mỗi X giây hoặc khi state thay đổi
-    AI_COOLDOWN = 0.5  # Tối thiểu 0.5s giữa các lần gọi AI
-    
     def __init__(self, yolo_path: str = None, gemma_path: str = None):
         self.window = WindowCapture()
         self.detector = YOLODetector(yolo_path)
         self.ai = GemmaInference(gemma_path)
         self.controller = None
-        
-        # Cache để tránh gọi AI liên tục
-        self._last_ai_call = 0
-        self._last_game_state = ""
-        self._last_action = None
     
     def _build_game_state(self, det: Dict) -> Tuple[List, List, List]:
         """Build game state from detections"""
@@ -53,33 +45,11 @@ class AutoPlayBot:
         
         return plants, zombies, seeds
     
-    def _should_call_ai(self, game_state: str, has_seed_ready: bool) -> bool:
-        """Kiểm tra có nên gọi AI không"""
-        now = time.time()
-        
-        # Không gọi nếu seed đang cooldown
-        if not has_seed_ready:
-            return False
-        
-        # Không gọi nếu chưa đủ cooldown
-        if now - self._last_ai_call < self.AI_COOLDOWN:
-            return False
-        
-        # Không gọi nếu game state không đổi
-        if game_state == self._last_game_state:
-            return False
-        
-        return True
-    
-    def _get_ai_action(self, game_state: str) -> Tuple[Optional[str], Dict]:
-        """Gọi AI và cache kết quả"""
-        self._last_ai_call = time.time()
-        self._last_game_state = game_state
-        
-        action, args = self.ai.get_action(game_state)
-        self._last_action = (action, args)
-        
-        return action, args
+    def _collect_suns(self, suns: List[Dict]):
+        """Thu thập tất cả sun"""
+        for sun in suns:
+            self.controller.collect_sun(sun["x"], sun["y"])
+            time.sleep(SUN_CLICK_DELAY)
     
     def run(self):
         print("=" * 50)
@@ -98,8 +68,7 @@ class AutoPlayBot:
             return
         
         self.controller = GameController(self.window)
-        print("\n✓ Running! Press 'q' to quit")
-        print(f"  AI cooldown: {self.AI_COOLDOWN}s\n")
+        print("\n✓ Running! Press 'q' to quit\n")
         
         fps_counter, fps_time, fps = 0, time.time(), 0
         frame_time = 1.0 / TARGET_FPS
@@ -113,36 +82,34 @@ class AutoPlayBot:
                     continue
                 
                 det = self.detector.detect_grouped(frame)
+                ai_acted = False
                 
-                # Rule-based: Auto collect sun (luôn chạy)
-                for sun in det.get("sun", []):
-                    self.controller.collect_sun(sun["x"], sun["y"])
-                    time.sleep(0.03)
-                
-                # Rule-based: Click sunflower reward
-                if det.get("sunflower_reward"):
-                    reward = det["sunflower_reward"][0]
-                    self.window.click(reward["x"], reward["y"])
-                    print("[RULE] Clicked sunflower reward")
-                
-                # AI Decision - CHỈ GỌI KHI CẦN
+                # AI Decision TRƯỚC - ưu tiên cao nhất
                 seed_ready = det.get("pea_shooter_ready", [])
                 if seed_ready:
                     plants, zombies, seeds = self._build_game_state(det)
                     game_state = GemmaInference.create_game_state(plants, zombies, seeds)
+                    action, args = self.ai.get_action(game_state)
+                    ai_calls += 1
                     
-                    if self._should_call_ai(game_state, bool(seed_ready)):
-                        action, args = self._get_ai_action(game_state)
-                        ai_calls += 1
-                        
-                        if action == "plant":
-                            seed = seed_ready[0]
-                            self.controller.plant_at_grid(
-                                (seed["x"], seed["y"]),
-                                args.get("row", 2),
-                                args.get("col", 0),
-                                args.get("plant_type", "pea_shooter")
-                            )
+                    if action == "plant":
+                        seed = seed_ready[0]
+                        self.controller.plant_at_grid(
+                            (seed["x"], seed["y"]),
+                            args.get("row", 2),
+                            args.get("col", 0),
+                            args.get("plant_type", "pea_shooter")
+                        )
+                        ai_acted = True
+                
+                # Thu sun CHỈ KHI AI không có action
+                if not ai_acted and det.get("sun"):
+                    self._collect_suns(det["sun"])
+                
+                # Click sunflower reward
+                if det.get("sunflower_reward"):
+                    self.window.click(det["sunflower_reward"][0]["x"], det["sunflower_reward"][0]["y"])
+                    print("[RULE] Clicked sunflower reward")
                 
                 # Draw & display
                 self._draw_frame(frame, det, fps, ai_calls)
@@ -181,9 +148,8 @@ class AutoPlayBot:
             for item in items:
                 cv2.circle(frame, (item["x"], item["y"]), 15, color, 2)
         
-        # Status bar
-        seed_status = "READY" if det.get("pea_shooter_ready") else "COOLDOWN"
-        status = f"FPS:{fps} | AI:{ai_calls} | Seed:{seed_status} | Zombie:{len(det.get('zombie', []))}"
+        seed_status = "READY" if det.get("pea_shooter_ready") else "CD"
+        status = f"FPS:{fps} | AI:{ai_calls} | Seed:{seed_status} | Z:{len(det.get('zombie', []))}"
         cv2.putText(frame, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
 
@@ -192,12 +158,9 @@ def main():
     parser = argparse.ArgumentParser(description='PvZ Auto Play Bot')
     parser.add_argument('-m', '--model', help='YOLO model path')
     parser.add_argument('-g', '--gemma', help='Gemma model path')
-    parser.add_argument('-c', '--cooldown', type=float, default=0.5, help='AI cooldown (seconds)')
     args = parser.parse_args()
     
     bot = AutoPlayBot(yolo_path=args.model, gemma_path=args.gemma)
-    if args.cooldown:
-        bot.AI_COOLDOWN = args.cooldown
     bot.run()
 
 

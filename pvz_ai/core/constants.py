@@ -52,6 +52,7 @@ INPUT_SIZE = (640, 640)
 # BOT CONFIG
 # ===========================================
 TARGET_FPS = 30
+SUN_CLICK_DELAY = 0.03  # Delay giữa các click sun trong cùng frame
 
 # ===========================================
 # AI LABELER CONFIG
