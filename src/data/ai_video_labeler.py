@@ -16,12 +16,16 @@ from .gemini_key_manager import (
     is_rate_limit_error,
     is_retryable_error,
 )
-from .action_validator import validate_actions, format_validation_result
+from .action_validator import (
+    validate_actions_with_video, 
+    validate_actions_simple,
+    format_validation_result
+)
 
 # ===========================================
 # CONFIG
 # ===========================================
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3-flash-preview"
 VIDEO_FPS = 24
 
 SYSTEM_PROMPT = """---
@@ -79,8 +83,8 @@ class AIVideoLabeler:
         # Chat history để giữ context qua các lượt
         self.history: list[types.Content] = []
     
-    def _load_video(self, video_path: str) -> types.Part:
-        """Load video as inline bytes"""
+    def _load_video(self, video_path: str) -> tuple[bytes, str]:
+        """Load video bytes"""
         print(f"📦 Loading video: {video_path}")
         with open(video_path, "rb") as f:
             video_bytes = f.read()
@@ -88,11 +92,7 @@ class AIVideoLabeler:
         size_mb = len(video_bytes) / (1024 * 1024)
         print(f"   Size: {size_mb:.1f} MB")
         
-        return types.Part.from_bytes(
-            data=video_bytes,
-            mime_type="video/mp4",
-            video_metadata=types.VideoMetadata(fps=VIDEO_FPS),
-        )
+        return video_bytes, "video/mp4"
     
     def _create_chat(self, video_part: types.Part):
         """Tạo chat session mới với video"""
@@ -107,7 +107,7 @@ class AIVideoLabeler:
         
         return chat, client
     
-    def _call_ai_chat(self, video_part: types.Part, prompt: str, is_first: bool = False) -> list:
+    def _call_ai_chat(self, video_bytes: bytes, mime_type: str, prompt: str, is_first: bool = False) -> list:
         """
         Gọi Gemini API qua chat conversation
         - Lượt đầu: gửi video + prompt
@@ -118,26 +118,29 @@ class AIVideoLabeler:
                 client = self.key_manager.get_client()
                 print(f"🤖 Calling AI with key {self.key_manager.get_current_key_info()}...")
                 
-                # Tạo chat session với history
-                chat = client.chats.create(
-                    model=MODEL_NAME,
-                    config=self.config,
-                    history=self.history,
-                )
-                
-                # Build message parts
+                # Build parts theo đúng format reference code
                 if is_first:
-                    # Lượt đầu: gửi video + prompt
-                    parts = [video_part, types.Part.from_text(text=prompt)]
+                    # Lượt đầu: gửi video với video_metadata + prompt
+                    parts = [
+                        types.Part(
+                            inline_data=types.Blob(data=video_bytes, mime_type=mime_type),
+                            video_metadata=types.VideoMetadata(fps=VIDEO_FPS),
+                        ),
+                        types.Part.from_text(text=prompt),
+                    ]
                 else:
-                    # Lượt sau: chỉ gửi prompt (video đã trong history)
+                    # Lượt sau: chỉ gửi prompt
                     parts = [types.Part.from_text(text=prompt)]
                 
-                # Stream response
-                full_text = ""
-                response_stream = chat.send_message_stream(message=parts)
+                contents = [types.Content(role="user", parts=parts)]
                 
-                for chunk in response_stream:
+                # Stream response (không dùng chat, dùng generate_content_stream như reference)
+                full_text = ""
+                for chunk in client.models.generate_content_stream(
+                    model=MODEL_NAME,
+                    contents=self.history + contents,
+                    config=self.config,
+                ):
                     if chunk.text:
                         full_text += chunk.text
                         print(".", end="", flush=True)
@@ -147,13 +150,8 @@ class AIVideoLabeler:
                 actions = json.loads(full_text)
                 print(f"📋 AI returned {len(actions)} actions")
                 
-                # Cập nhật history cho lượt sau
-                # User message
-                self.history.append(types.Content(
-                    role="user",
-                    parts=parts,
-                ))
-                # AI response
+                # Cập nhật history
+                self.history.append(types.Content(role="user", parts=parts))
                 self.history.append(types.Content(
                     role="model",
                     parts=[types.Part.from_text(text=full_text)],
@@ -225,11 +223,11 @@ class AIVideoLabeler:
         output_dir.mkdir(parents=True, exist_ok=True)
         
         # Load video once
-        video_part = self._load_video(video_path)
+        video_bytes, mime_type = self._load_video(video_path)
         
         # Initial call (lượt đầu, gửi video)
         actions = self._call_ai_chat(
-            video_part, 
+            video_bytes, mime_type,
             "Xem video và tạo danh sách actions JSON.",
             is_first=True
         )
@@ -238,13 +236,21 @@ class AIVideoLabeler:
         raw_path = output_dir / f"raw_iter_0.json"
         self._save_json(actions, str(raw_path))
         
-        # Validation loop
+        # Validation loop - dùng video để validate
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
         
         for iteration in range(max_iterations):
             print(f"\n--- Iteration {iteration + 1}/{max_iterations} ---")
             
-            validation = validate_actions(actions)
+            # Thử validate với video trước, nếu lỗi thì dùng simple
+            try:
+                validation = validate_actions_with_video(actions, video_path)
+                print("   (Validated with video + YOLO)")
+            except Exception as e:
+                print(f"   ⚠️ Cannot validate with video: {e}")
+                print("   (Using simple validation)")
+                validation = validate_actions_simple(actions)
+            
             print(format_validation_result(validation))
             
             if validation["passed"]:
@@ -268,8 +274,8 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 # Reset blocked keys for retry
                 self.key_manager.reset_blocked()
                 
-                # Gọi tiếp trong cùng chat (is_first=False, không gửi lại video)
-                actions = self._call_ai_chat(video_part, prompt, is_first=False)
+                # Gọi tiếp trong cùng conversation (is_first=False, không gửi lại video)
+                actions = self._call_ai_chat(video_bytes, mime_type, prompt, is_first=False)
                 
                 # Save each iteration
                 raw_path = output_dir / f"raw_iter_{iteration + 1}.json"
