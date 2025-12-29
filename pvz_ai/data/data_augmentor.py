@@ -185,20 +185,19 @@ def augment_sample(sample: Dict, mirror_action: bool = True) -> List[Dict]:
     sample = copy.deepcopy(sample)
     sample["game_state"] = game_state
     
-    variations = augment_game_state(game_state, valid_rows)
+    # Chỉ giữ original và shift zombie variations
+    # KHÔNG mirror vì dễ tạo invalid data
+    variations = [game_state]
+    
+    for shift in [-1, 1]:
+        new_state = shift_zombie_cols(game_state, shift)
+        if new_state and new_state != game_state:
+            if is_zombies_in_valid_rows(new_state, valid_rows):
+                variations.append(new_state)
     
     for var_state in variations:
         new_sample = copy.deepcopy(sample)
         new_sample["game_state"] = var_state
-        
-        # Mirror action row CHỈ KHI có nhiều row và state bị mirror
-        if mirror_action and len(valid_rows) > 1:
-            if var_state == mirror_rows(game_state) and var_state != game_state:
-                if action == "plant" and "row" in args:
-                    mirror_map = {0: 4, 1: 3, 2: 2, 3: 1, 4: 0}
-                    new_sample["arguments"] = copy.deepcopy(args)
-                    new_sample["arguments"]["row"] = mirror_map.get(args["row"], args["row"])
-        
         results.append(new_sample)
     
     return results
