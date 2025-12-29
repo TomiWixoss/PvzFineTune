@@ -1,0 +1,248 @@
+{
+  "video": "data\\raw\\videos\\pvz_level2_part2.mp4",
+  "timestamp": "2025-12-29T22:51:38.829142",
+  "model": "gemini-3-flash-preview",
+  "iterations": 1,
+  "validation": {
+    "passed": true,
+    "score": 100.0,
+    "total": 13,
+    "errors_count": 0
+  },
+  "actions": [
+    {
+      "time": "0:05.000",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 1,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the second row, fourth column."
+    },
+    {
+      "time": "0:09.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun to gather and seeds to recharge."
+    },
+    {
+      "time": "0:12.958",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 2
+      },
+      "note": "Planting a sunflower in the first row, third column.",
+      "_fixed_from": "0:13.042"
+    },
+    {
+      "time": "0:17.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and seed recharge."
+    },
+    {
+      "time": "0:21.244",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 4,
+        "col": 2
+      },
+      "note": "Planting a sunflower in the fifth row, third column.",
+      "_fixed_from": "0:21.917"
+    },
+    {
+      "time": "0:24.997",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the third row, fourth column.",
+      "_fixed_from": "0:25.292"
+    },
+    {
+      "time": "0:30.000",
+      "action": "wait",
+      "args": {},
+      "note": "Monitoring the wave and waiting for resources."
+    },
+    {
+      "time": "0:32.242",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 1
+      },
+      "note": "Planting another sunflower in the first row, second column.",
+      "_fixed_from": "0:33.125"
+    },
+    {
+      "time": "0:37.121",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 1,
+        "col": 4
+      },
+      "note": "Planting a pea shooter in the second row, fifth column.",
+      "_fixed_from": "0:37.458"
+    },
+    {
+      "time": "0:43.000",
+      "action": "wait",
+      "args": {},
+      "note": "Defending and waiting for sun."
+    },
+    {
+      "time": "0:48.875",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 3
+      },
+      "note": "Planting a sunflower in the first row, fourth column."
+    },
+    {
+      "time": "0:52.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for enough sun to plant more defensive plants."
+    },
+    {
+      "time": "0:55.498",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 3,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the fourth row, fourth column.",
+      "_fixed_from": "0:55.583"
+    }
+  ],
+  "all_actions": [
+    {
+      "time": "0:05.000",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 1,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the second row, fourth column."
+    },
+    {
+      "time": "0:09.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun to gather and seeds to recharge."
+    },
+    {
+      "time": "0:12.958",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 2
+      },
+      "note": "Planting a sunflower in the first row, third column.",
+      "_fixed_from": "0:13.042"
+    },
+    {
+      "time": "0:17.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and seed recharge."
+    },
+    {
+      "time": "0:21.244",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 4,
+        "col": 2
+      },
+      "note": "Planting a sunflower in the fifth row, third column.",
+      "_fixed_from": "0:21.917"
+    },
+    {
+      "time": "0:24.997",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the third row, fourth column.",
+      "_fixed_from": "0:25.292"
+    },
+    {
+      "time": "0:30.000",
+      "action": "wait",
+      "args": {},
+      "note": "Monitoring the wave and waiting for resources."
+    },
+    {
+      "time": "0:32.242",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 1
+      },
+      "note": "Planting another sunflower in the first row, second column.",
+      "_fixed_from": "0:33.125"
+    },
+    {
+      "time": "0:37.121",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 1,
+        "col": 4
+      },
+      "note": "Planting a pea shooter in the second row, fifth column.",
+      "_fixed_from": "0:37.458"
+    },
+    {
+      "time": "0:43.000",
+      "action": "wait",
+      "args": {},
+      "note": "Defending and waiting for sun."
+    },
+    {
+      "time": "0:48.875",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 0,
+        "col": 3
+      },
+      "note": "Planting a sunflower in the first row, fourth column."
+    },
+    {
+      "time": "0:52.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for enough sun to plant more defensive plants."
+    },
+    {
+      "time": "0:55.498",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 3,
+        "col": 3
+      },
+      "note": "Planting a pea shooter in the fourth row, fourth column.",
+      "_fixed_from": "0:55.583"
+    }
+  ]
+}

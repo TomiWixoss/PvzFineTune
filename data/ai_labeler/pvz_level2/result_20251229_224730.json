@@ -1,0 +1,172 @@
+{
+  "video": "data\\raw\\videos\\pvz_level2_part1.mp4",
+  "timestamp": "2025-12-29T22:50:31.564745",
+  "model": "gemini-3-flash-preview",
+  "iterations": 2,
+  "validation": {
+    "passed": true,
+    "score": 100.0,
+    "total": 9,
+    "errors_count": 0
+  },
+  "actions": [
+    {
+      "time": "0:08.953",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 0
+      },
+      "note": "Planting first sunflower.",
+      "_fixed_from": "0:09.667"
+    },
+    {
+      "time": "0:11.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and sunflower cooldown."
+    },
+    {
+      "time": "0:18.120",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 1
+      },
+      "note": "Planting second sunflower.",
+      "_fixed_from": "0:18.625"
+    },
+    {
+      "time": "0:20.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and sunflower cooldown."
+    },
+    {
+      "time": "0:26.538",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 2
+      },
+      "note": "Planting third sunflower.",
+      "_fixed_from": "0:26.875"
+    },
+    {
+      "time": "0:28.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for enough sun (100) for a pea_shooter."
+    },
+    {
+      "time": "0:44.953",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 3
+      },
+      "note": "Planting first pea_shooter to defend the lane.",
+      "_fixed_from": "0:45.458"
+    },
+    {
+      "time": "0:47.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and pea_shooter cooldown."
+    },
+    {
+      "time": "1:00.083",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 4
+      },
+      "note": "Planting second pea_shooter."
+    }
+  ],
+  "all_actions": [
+    {
+      "time": "0:08.953",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 0
+      },
+      "note": "Planting first sunflower.",
+      "_fixed_from": "0:09.667"
+    },
+    {
+      "time": "0:11.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and sunflower cooldown."
+    },
+    {
+      "time": "0:18.120",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 1
+      },
+      "note": "Planting second sunflower.",
+      "_fixed_from": "0:18.625"
+    },
+    {
+      "time": "0:20.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and sunflower cooldown."
+    },
+    {
+      "time": "0:26.538",
+      "action": "plant",
+      "args": {
+        "plant_type": "sunflower",
+        "row": 2,
+        "col": 2
+      },
+      "note": "Planting third sunflower.",
+      "_fixed_from": "0:26.875"
+    },
+    {
+      "time": "0:28.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for enough sun (100) for a pea_shooter."
+    },
+    {
+      "time": "0:44.953",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 3
+      },
+      "note": "Planting first pea_shooter to defend the lane.",
+      "_fixed_from": "0:45.458"
+    },
+    {
+      "time": "0:47.000",
+      "action": "wait",
+      "args": {},
+      "note": "Waiting for sun and pea_shooter cooldown."
+    },
+    {
+      "time": "1:00.083",
+      "action": "plant",
+      "args": {
+        "plant_type": "pea_shooter",
+        "row": 2,
+        "col": 4
+      },
+      "note": "Planting second pea_shooter."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "done": 3,
+  "total": 3,
+  "actions": 29,
+  "training_files": [
+    "data\\ai_labeler\\pvz_level2\\training_data_20251229_224730.json",
+    "data\\ai_labeler\\pvz_level2\\training_data_20251229_225034.json",
+    "data\\ai_labeler\\pvz_level2\\training_data_20251229_225143.json"
+  ]
+}

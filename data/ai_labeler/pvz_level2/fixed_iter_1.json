@@ -1,0 +1,58 @@
+[
+  {
+    "time": "0:00.000",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting to plant next plant"
+  },
+  {
+    "time": "0:04.042",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 0,
+      "col": 5
+    },
+    "note": "Planting pea_shooter"
+  },
+  {
+    "time": "0:04.083",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting to plant next plant"
+  },
+  {
+    "time": "0:04.076",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 5
+    },
+    "note": "Planting pea_shooter",
+    "_fixed_from": "0:05.042"
+  },
+  {
+    "time": "0:05.083",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting to plant next plant"
+  },
+  {
+    "time": "0:04.068",
+    "action": "plant",
+    "args": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 5
+    },
+    "note": "Planting pea_shooter",
+    "_fixed_from": "0:06.042"
+  },
+  {
+    "time": "0:06.083",
+    "action": "wait",
+    "args": {},
+    "note": "Waiting to plant next plant"
+  }
+]

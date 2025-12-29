@@ -1,0 +1,202 @@
+[
+  {
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,1),(sunflower,0,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,1),(sunflower,0,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,2),(sunflower,0,1),(sunflower,0,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,0,0),(sunflower,2,0),(sunflower,0,2),(sunflower,0,1)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(sunflower,0,2),(sunflower,2,0),(sunflower,0,0),(sunflower,0,1)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(sunflower,0,2),(sunflower,2,0),(sunflower,0,0),(sunflower,0,1),(sunflower,2,2),(sunflower,2,1)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,ready),(sunflower,cooldown)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,3),(sunflower,0,2),(sunflower,0,1),(sunflower,0,0),(sunflower,2,0),(sunflower,2,1)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,3),(sunflower,0,2),(sunflower,2,1),(sunflower,2,2),(sunflower,0,0),(sunflower,0,1),(sunflower,2,0)]. ZOMBIES:[(zombie,2,7)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(sunflower,0,0),(sunflower,0,1),(sunflower,0,2),(sunflower,2,1),(sunflower,2,2),(sunflower,4,0),(sunflower,2,0)]. ZOMBIES:[(zombie,2,6)]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,3),(sunflower,0,2),(sunflower,0,0),(sunflower,0,1),(sunflower,2,1),(sunflower,2,2),(sunflower,4,0),(sunflower,2,0)]. ZOMBIES:[(zombie,0,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 4,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,3),(sunflower,0,2),(sunflower,0,0),(sunflower,2,0),(sunflower,0,1),(sunflower,4,2),(sunflower,2,1),(sunflower,2,2),(sunflower,4,0)]. ZOMBIES:[(zombie,0,8)]. SEEDS:[(pea_shooter,ready),(sunflower,cooldown)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(sunflower,4,0),(sunflower,0,1),(sunflower,2,0),(sunflower,2,1),(sunflower,0,0),(sunflower,0,2),(sunflower,2,2)]. ZOMBIES:[(zombie,0,7)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(sunflower,0,0),(sunflower,0,1),(sunflower,4,2),(sunflower,0,2),(sunflower,2,0),(sunflower,4,0),(sunflower,2,1)]. ZOMBIES:[(zombie,0,7)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,3),(pea_shooter,0,3),(sunflower,0,2),(sunflower,0,0),(sunflower,2,0),(sunflower,4,1),(sunflower,2,2),(sunflower,0,1),(sunflower,4,2),(sunflower,4,0)]. ZOMBIES:[(zombie,0,6)]. SEEDS:[(pea_shooter,ready),(sunflower,cooldown)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 4
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,0,4),(sunflower,0,1),(sunflower,2,0),(sunflower,2,2),(sunflower,4,1),(sunflower,0,2),(sunflower,0,0),(sunflower,4,0)]. ZOMBIES:[(zombie,4,8),(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,0,4),(pea_shooter,2,4),(sunflower,0,0),(sunflower,4,0),(sunflower,0,1),(sunflower,2,2),(sunflower,4,1),(sunflower,0,2)]. ZOMBIES:[(zombie,2,8),(zombie,4,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 0,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,4),(pea_shooter,4,3),(pea_shooter,0,4),(sunflower,0,1),(sunflower,4,0),(sunflower,2,1),(sunflower,4,2),(sunflower,0,2),(sunflower,0,0)]. ZOMBIES:[(zombie,2,8),(zombie,4,7)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,4),(pea_shooter,0,3),(sunflower,0,2),(sunflower,2,1),(sunflower,0,1),(sunflower,2,0),(sunflower,0,0),(sunflower,4,0),(sunflower,2,2)]. ZOMBIES:[(zombie,0,8),(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 3,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,3),(pea_shooter,0,4),(sunflower,0,2),(sunflower,4,2),(sunflower,2,0),(sunflower,4,1),(sunflower,4,0),(sunflower,0,1),(sunflower,0,0)]. ZOMBIES:[(zombie,4,8),(zombie,0,8)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,4),(pea_shooter,0,4),(pea_shooter,2,3),(sunflower,0,2),(sunflower,2,1),(sunflower,0,1),(sunflower,0,0),(sunflower,2,2),(sunflower,2,0),(sunflower,4,0)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 0,
+      "col": 5
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,4),(pea_shooter,0,4),(sunflower,0,2),(sunflower,0,1),(sunflower,2,1),(sunflower,2,2),(sunflower,0,0),(sunflower,4,0),(sunflower,2,0)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,4),(pea_shooter,0,4),(sunflower,0,2),(sunflower,0,1),(sunflower,2,1),(sunflower,2,2),(sunflower,0,0),(sunflower,4,0),(sunflower,2,0)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 5
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,0,3),(pea_shooter,4,4),(pea_shooter,2,5),(pea_shooter,2,3),(sunflower,0,0),(sunflower,0,2),(sunflower,2,1),(sunflower,4,0),(sunflower,2,0),(sunflower,2,2),(sunflower,0,1)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,4,3),(pea_shooter,2,4),(pea_shooter,0,4),(sunflower,0,2),(sunflower,0,1),(sunflower,2,1),(sunflower,2,2),(sunflower,0,0),(sunflower,4,0),(sunflower,2,0)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 5
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,4),(pea_shooter,4,3),(pea_shooter,0,3),(sunflower,0,2),(sunflower,0,1),(sunflower,0,0),(sunflower,4,1),(sunflower,2,0),(sunflower,4,2),(sunflower,4,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "action": "wait",
+    "arguments": {}
+  }
+]
