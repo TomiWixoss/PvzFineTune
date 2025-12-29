@@ -6,31 +6,43 @@ AI bot tự động chơi Plants vs Zombies sử dụng YOLOv11 (object detectio
 
 ```
 pvz-ai-bot/
-├── src/
-│   ├── config.py              # Cấu hình chung (class names, paths, colors)
-│   ├── bot/
-│   │   └── auto_play.py       # Bot tự động chơi game
-│   ├── data/
-│   │   ├── youtube_downloader.py   # Tải video YouTube
-│   │   └── video_to_frames.py      # Tách frames từ video
-│   ├── inference/
-│   │   ├── yolo_detector.py        # YOLO detection
-│   │   ├── gemma_inference.py      # Gemma AI decisions
-│   │   ├── realtime_detection.py   # Detection realtime từ game
-│   │   └── video_detection.py      # Detection từ video file
-│   └── utils/
-│       ├── window_capture.py       # Capture cửa sổ game
-│       └── get_positions.py        # Tool lấy tọa độ
-├── notebooks/
-│   ├── yolo_finetune.ipynb    # Train YOLO trên Colab
-│   └── gemma_finetune.ipynb   # Train Gemma trên Colab
+├── pvz_ai/                    # Main package
+│   ├── core/                  # Constants và config
+│   │   ├── constants.py       # Hằng số không đổi
+│   │   └── config.py          # Cấu hình có thể thay đổi
+│   ├── utils/                 # Utilities
+│   │   ├── time_utils.py      # Parse/format timestamps
+│   │   ├── grid_utils.py      # Grid coordinate conversion
+│   │   └── window_capture.py  # Capture game window
+│   ├── inference/             # AI inference
+│   │   ├── yolo_detector.py   # YOLO detection (OpenVINO)
+│   │   └── gemma_inference.py # Gemma inference (OpenVINO)
+│   ├── bot/                   # Auto play bot
+│   │   ├── controller.py      # Game controller
+│   │   └── auto_play.py       # Main bot
+│   ├── data/                  # Data collection
+│   │   ├── youtube_downloader.py
+│   │   ├── video_to_frames.py
+│   │   ├── video_dataset_builder.py
+│   │   └── dataset_converter.py
+│   ├── labeler/               # AI video labeling
+│   │   ├── gemini_client.py   # Gemini API key manager
+│   │   ├── validator.py       # Action validator
+│   │   ├── auto_fixer.py      # Auto fix timestamps
+│   │   └── ai_labeler.py      # Main AI labeler
+│   └── tools/                 # Utility tools
+│       ├── realtime_detection.py
+│       └── get_positions.py
 ├── data/
-│   └── raw/
-│       ├── videos/            # Video gameplay
-│       └── frames/            # Frames đã tách
+│   ├── raw/                   # Raw data (videos, frames)
+│   ├── processed/             # Processed datasets
+│   └── ai_labeler/            # AI labeler outputs
 ├── models/
-│   ├── yolo/                  # YOLO model (best.xml, best.bin)
+│   ├── yolo/                  # YOLO model (best.xml)
 │   └── gemma/                 # Gemma model
+├── notebooks/
+│   ├── yolo_finetune.ipynb
+│   └── gemma_finetune.ipynb
 └── requirements.txt
 ```
 
@@ -43,110 +55,70 @@ pip install -r requirements.txt
 winget install ffmpeg
 ```
 
-## Workflow
+## Commands
 
-### 1. Thu thập Dataset
+### Data Collection
 
 ```bash
 # Tải video YouTube
-python -m src.data.youtube_downloader "https://youtu.be/VIDEO_ID" -s 1:00 -e 5:00 -n pvz_level1
+python -m pvz_ai.data.youtube_downloader "https://youtu.be/VIDEO_ID" -s 1:00 -e 5:00 -n pvz_level1
 
-# Tách frames (1 FPS)
-python -m src.data.video_to_frames data/raw/videos/pvz_level1.mp4
+# Tách frames
+python -m pvz_ai.data.video_to_frames data/raw/videos/pvz_level1.mp4 -f 1
 
-# Tách với FPS khác
-python -m src.data.video_to_frames data/raw/videos/pvz_level1.mp4 -f 2
+# AI tự động label video
+python -m pvz_ai.labeler.ai_labeler video.mp4
 
-# Tách tất cả videos
-python -m src.data.video_to_frames data/raw/videos --batch
+# Build dataset từ actions file
+python -m pvz_ai.data.video_dataset_builder video.mp4 -a actions.json -o dataset.json
+
+# Convert sang training format
+python -m pvz_ai.data.dataset_converter dataset.json -o training_data.json
 ```
 
-### 2. Gán nhãn
+### Inference & Bot
 
-Upload frames lên [Roboflow](https://roboflow.com/) và gán nhãn với các class:
+```bash
+# Detection realtime từ game
+python -m pvz_ai.tools.realtime_detection
 
-| Class                  | Mô tả                        |
-| ---------------------- | ---------------------------- |
-| `sun`                  | Mặt trời                     |
-| `zombie`               | Zombie                       |
-| `pea_shooter`          | Cây bắn đậu đã trồng         |
-| `pea_shooter_ready`    | Gói hạt sáng (dùng được)     |
-| `pea_shooter_cooldown` | Gói hạt tối (đang cooldown)  |
-| `sunflower_reward`     | Gói sunflower thưởng qua màn |
+# Chạy bot tự động
+python -m pvz_ai.bot.auto_play
 
-### 3. Training
+# Lấy tọa độ grid
+python -m pvz_ai.tools.get_positions
+```
+
+## Classes được detect (YOLO)
+
+| Class                  | Mô tả                           |
+| ---------------------- | ------------------------------- |
+| `sun`                  | Mặt trời                        |
+| `zombie`               | Zombie                          |
+| `pea_shooter`          | Cây bắn đậu đã trồng            |
+| `pea_shooter_ready`    | Seed packet sáng (có thể trồng) |
+| `pea_shooter_cooldown` | Seed packet tối (đang cooldown) |
+| `sunflower_reward`     | Phần thưởng qua màn             |
+
+## AI Actions
+
+- `plant(plant_type, row, col)` - Trồng cây tại vị trí grid
+- `wait()` - Chờ (khi seed cooldown hoặc không đủ sun)
+
+Thu thập sun được xử lý bằng rule-based.
+
+## Training
 
 Mở notebooks trên Google Colab (chọn GPU runtime):
 
 - `notebooks/yolo_finetune.ipynb` - Train YOLO
 - `notebooks/gemma_finetune.ipynb` - Train Gemma
 
-Sau khi train xong, download và giải nén vào thư mục `models/`.
-
-### 4. Chạy Bot
+## Environment Variables
 
 ```bash
-# Detection realtime từ game
-python -m src.inference.realtime_detection
-
-# Detection từ video file
-python -m src.inference.video_detection data/raw/videos/pvz_level1.mp4
-
-# Bot tự động chơi
-python -m src.bot.auto_play
+# .env
+GEMINI_API_KEY=your_api_key_here
+# Hoặc nhiều keys
+GEMINI_API_KEY=key1,key2,key3
 ```
-
-## Commands
-
-| Command                                         | Mô tả                      |
-| ----------------------------------------------- | -------------------------- |
-| `python -m src.data.youtube_downloader URL`     | Tải video YouTube          |
-| `python -m src.data.video_to_frames VIDEO`      | Tách frames từ video       |
-| `python -m src.inference.realtime_detection`    | Detection realtime từ game |
-| `python -m src.inference.video_detection VIDEO` | Detection từ video file    |
-| `python -m src.bot.auto_play`                   | Chạy bot tự động           |
-| `python -m src.utils.get_positions`             | Lấy tọa độ trong game      |
-
-## Options
-
-### youtube_downloader
-
-```
--s, --start    Thời gian bắt đầu (MM:SS)
--e, --end      Thời gian kết thúc (MM:SS)
--n, --name     Tên file output
--o, --output   Thư mục output
-```
-
-### video_to_frames
-
-```
--f, --fps      FPS để tách (default: 1)
--o, --output   Thư mục output
---batch        Xử lý tất cả videos trong thư mục
-```
-
-### video_detection
-
-```
--m, --model    Đường dẫn model YOLO
--c, --conf     Confidence threshold (default: 0.5)
--o, --output   Đường dẫn video output
---show         Hiển thị video trong lúc xử lý
-```
-
-### auto_play
-
-```
--m, --model    Đường dẫn model YOLO
--g, --gemma    Đường dẫn model Gemma
-```
-
-## Cấu hình
-
-Chỉnh sửa `src/config.py` để thay đổi:
-
-- Đường dẫn models
-- Class names và colors
-- Tọa độ grid game
-- Các thông số bot

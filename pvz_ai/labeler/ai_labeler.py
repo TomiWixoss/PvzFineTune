@@ -1,34 +1,24 @@
 # -*- coding: utf-8 -*-
 """
 AI Video Labeler - Gemini xem video PvZ và xuất JSON actions
-Main orchestrator: load video -> call AI -> validate -> retry loop
+GIỮ NGUYÊN LOGIC GEMINI 100% - KHÔNG SỬA
 """
 
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from google.genai import types
 
-from .gemini_key_manager import (
-    GeminiKeyManager,
-    is_rate_limit_error,
-    is_retryable_error,
-)
-from .action_validator import (
-    validate_actions_with_video, 
-    validate_actions_simple,
-    format_validation_result
-)
-from .action_auto_fixer import ActionAutoFixer
+from ..core.constants import GEMINI_MODEL_NAME, VIDEO_FPS
+from .gemini_client import GeminiKeyManager, is_rate_limit_error, is_retryable_error
+from .validator import ActionValidator
+from .auto_fixer import ActionAutoFixer
 
 # ===========================================
-# CONFIG
+# SYSTEM PROMPT - GIỮ NGUYÊN 100%
 # ===========================================
-MODEL_NAME = "gemini-3-flash-preview"
-VIDEO_FPS = 24
-
 SYSTEM_PROMPT = """---
 Bạn là chuyên gia phân tích gameplay Plants vs Zombies. Xem video frame-by-frame và ghi lại hành động TRỒNG CÂY của người chơi.
 
@@ -85,8 +75,9 @@ Col 0 → → → → → → → → Col 8
 
 
 class AIVideoLabeler:
+    """AI Video Labeler - GIỮ NGUYÊN LOGIC 100%"""
+    
     def __init__(self, api_key: Optional[str] = None):
-        # Nếu truyền 1 key thì dùng, không thì load từ env
         keys = [api_key] if api_key else None
         self.key_manager = GeminiKeyManager(keys)
         
@@ -97,10 +88,9 @@ class AIVideoLabeler:
             system_instruction=[types.Part.from_text(text=SYSTEM_PROMPT)],
         )
         
-        # Chat history để giữ context qua các lượt
-        self.history: list[types.Content] = []
+        self.history: List[types.Content] = []
     
-    def _load_video(self, video_path: str) -> tuple[bytes, str]:
+    def _load_video(self, video_path: str) -> tuple:
         """Load video bytes"""
         print(f"📦 Loading video: {video_path}")
         with open(video_path, "rb") as f:
@@ -111,33 +101,14 @@ class AIVideoLabeler:
         
         return video_bytes, "video/mp4"
     
-    def _create_chat(self, video_part: types.Part):
-        """Tạo chat session mới với video"""
-        client = self.key_manager.get_client()
-        
-        # Tạo chat với history (nếu có)
-        chat = client.chats.create(
-            model=MODEL_NAME,
-            config=self.config,
-            history=self.history,
-        )
-        
-        return chat, client
-    
-    def _call_ai_chat(self, video_bytes: bytes, mime_type: str, prompt: str, is_first: bool = False) -> list:
-        """
-        Gọi Gemini API qua chat conversation
-        - Lượt đầu: gửi video + prompt
-        - Lượt sau: chỉ gửi prompt (AI đã có context video từ history)
-        """
+    def _call_ai_chat(self, video_bytes: bytes, mime_type: str, prompt: str, is_first: bool = False) -> List:
+        """Gọi Gemini API - GIỮ NGUYÊN LOGIC 100%"""
         while self.key_manager.has_available_key():
             try:
                 client = self.key_manager.get_client()
                 print(f"🤖 Calling AI with key {self.key_manager.get_current_key_info()}...")
                 
-                # Build parts theo đúng format reference code
                 if is_first:
-                    # Lượt đầu: gửi video với video_metadata + prompt
                     parts = [
                         types.Part(
                             inline_data=types.Blob(data=video_bytes, mime_type=mime_type),
@@ -146,15 +117,13 @@ class AIVideoLabeler:
                         types.Part.from_text(text=prompt),
                     ]
                 else:
-                    # Lượt sau: chỉ gửi prompt
                     parts = [types.Part.from_text(text=prompt)]
                 
                 contents = [types.Content(role="user", parts=parts)]
                 
-                # Stream response (không dùng chat, dùng generate_content_stream như reference)
                 full_text = ""
                 for chunk in client.models.generate_content_stream(
-                    model=MODEL_NAME,
+                    model=GEMINI_MODEL_NAME,
                     contents=self.history + contents,
                     config=self.config,
                 ):
@@ -163,11 +132,9 @@ class AIVideoLabeler:
                         print(".", end="", flush=True)
                 print()
                 
-                # Parse JSON
                 actions = json.loads(full_text)
                 print(f"📋 AI returned {len(actions)} actions")
                 
-                # Cập nhật history
                 self.history.append(types.Content(role="user", parts=parts))
                 self.history.append(types.Content(
                     role="model",
@@ -178,8 +145,6 @@ class AIVideoLabeler:
                 
             except json.JSONDecodeError as e:
                 print(f"❌ JSON parse error: {e}")
-                print(f"   Raw: {full_text[:200]}...")
-                print("   → Rotating key and retrying...")
                 if not self.key_manager.rotate_key():
                     break
                 continue
@@ -196,7 +161,7 @@ class AIVideoLabeler:
                     if not self.key_manager.rotate_key():
                         break
                 elif is_retryable_error(e):
-                    print("   → Overload, retrying immediately...")
+                    print("   → Overload, retrying...")
                     continue
                 else:
                     print("   → Unknown error, rotating key...")
@@ -210,14 +175,14 @@ class AIVideoLabeler:
         """Reset chat history"""
         self.history = []
     
-    def _save_json(self, data: any, path: str):
+    def _save_json(self, data: Any, path: str):
         """Save JSON to file"""
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         print(f"💾 Saved: {path}")
     
-    def _filter_valid_actions(self, actions: list, validation: dict) -> list:
+    def _filter_valid_actions(self, actions: List, validation: Dict) -> List:
         """Lọc chỉ giữ lại các actions không có error"""
         if not validation.get("validated_samples"):
             return actions
@@ -225,22 +190,17 @@ class AIVideoLabeler:
         valid_actions = []
         for sample in validation["validated_samples"]:
             if sample.get("valid", False):
-                # Tìm action tương ứng
                 idx = sample.get("id", 0) - 1
                 if 0 <= idx < len(actions):
                     valid_actions.append(actions[idx])
         
         return valid_actions
     
-    def _get_game_states_for_errors(self, video_path: str, actions: list, validation: dict) -> str:
-        """
-        Thu thập game_state tại các timestamp có lỗi
-        Returns: string mô tả game_state cho AI
-        """
+    def _get_game_states_for_errors(self, video_path: str, actions: List, validation: Dict) -> str:
+        """Thu thập game_state tại các timestamp có lỗi"""
         try:
-            from .video_dataset_builder import VideoDatasetBuilder
+            from ..data.video_dataset_builder import VideoDatasetBuilder
             
-            # Lấy danh sách samples có lỗi
             validated_samples = validation.get("validated_samples", [])
             error_samples = [s for s in validated_samples if not s.get("valid", True)]
             
@@ -248,7 +208,7 @@ class AIVideoLabeler:
                 return "Không có thông tin game_state"
             
             lines = []
-            for sample in error_samples[:10]:  # Max 10 errors
+            for sample in error_samples[:10]:
                 idx = sample.get("id", 0)
                 timestamp = sample.get("timestamp", "?")
                 game_state = sample.get("game_state", {})
@@ -269,32 +229,15 @@ class AIVideoLabeler:
         except Exception as e:
             return f"Không thể lấy game_state: {e}"
     
-    def process_video(
-        self,
-        video_path: str,
-        output_path: Optional[str] = None,
-    ) -> dict:
-        """
-        Main pipeline:
-        1. Load video
-        2. Call AI (chat) -> get actions
-        3. Save raw immediately
-        4. TỰ FIX: Quét ±2s tìm timestamp seed ready
-        5. Validate với video + YOLO
-        6. Nếu còn lỗi không fix được → gửi errors về AI
-        7. Lặp vô hạn tới khi pass hoặc hết key
-        8. Cuối cùng lưu bản sạch (chỉ actions không error)
-        """
+    def process_video(self, video_path: str, output_path: Optional[str] = None) -> Dict:
+        """Main pipeline - GIỮ NGUYÊN LOGIC 100%"""
         print(f"\n{'='*50}")
         print(f"🎬 Processing: {video_path}")
-        print(f"   Model: {MODEL_NAME} | Thinking: HIGH")
-        print(f"   Mode: Auto-fix + Loop until pass > 90%")
+        print(f"   Model: {GEMINI_MODEL_NAME} | Thinking: HIGH")
         print(f"{'='*50}\n")
         
-        # Reset chat history cho video mới
         self.reset_chat()
         
-        # Setup output - gom vào data/ai_labeler/<video_name>/
         video_name = Path(video_path).stem
         timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
         
@@ -305,17 +248,12 @@ class AIVideoLabeler:
         
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Final output paths
         final_output = output_dir / f"result_{timestamp_str}.json"
         training_output = output_dir / f"training_data_{timestamp_str}.json"
         
-        # Load video once
         video_bytes, mime_type = self._load_video(video_path)
-        
-        # Init auto fixer
         auto_fixer = ActionAutoFixer(video_path)
         
-        # Initial call (lượt đầu, gửi video)
         actions = self._call_ai_chat(
             video_bytes, mime_type,
             "Xem video và tạo danh sách actions JSON.",
@@ -326,63 +264,51 @@ class AIVideoLabeler:
             print("❌ AI không trả về actions, dừng.")
             return {"video": video_path, "actions": [], "validation": {"passed": False, "score": 0}}
         
-        # Save raw immediately
         iteration = 0
         raw_path = output_dir / f"raw_iter_{iteration}.json"
         self._save_json(actions, str(raw_path))
         
-        # Validation loop - lặp vô hạn tới khi pass hoặc hết key
         validation = {"score": 0, "passed": False, "errors": [], "warnings": []}
         
         while True:
             iteration += 1
             print(f"\n--- Iteration {iteration} ---")
             
-            # BƯỚC 1: Tự fix trước
             print("🔧 Auto-fixing timestamps...")
             fix_result = auto_fixer.fix_actions(actions)
             
             if fix_result["fix_count"] > 0:
                 print(f"   ✅ Fixed {fix_result['fix_count']} actions")
                 actions = fix_result["fixed_actions"]
-                # Save fixed version
                 fixed_path = output_dir / f"fixed_iter_{iteration}.json"
                 self._save_json(actions, str(fixed_path))
             
-            # BƯỚC 2: Validate
             try:
-                validation = validate_actions_with_video(actions, video_path)
-                print("   (Validated with video + YOLO)")
+                validation = ActionValidator.validate_with_video(actions, video_path)
             except Exception as e:
                 print(f"   ⚠️ Cannot validate with video: {e}")
-                print("   (Using simple validation)")
-                validation = validate_actions_simple(actions)
+                validation = ActionValidator.validate_simple(actions)
             
-            print(format_validation_result(validation))
+            print(ActionValidator.format_result(validation))
             
             if validation["passed"]:
                 print("✅ PASSED!")
                 break
             
-            # BƯỚC 3: Nếu còn lỗi không fix được → gửi AI
             unfixable = fix_result.get("unfixable_errors", [])
             if not unfixable:
-                # Dùng validation errors
                 unfixable = validation.get("errors", [])
             
             if not unfixable:
                 print("✅ No more errors!")
                 break
             
-            # Check còn key không
             if not self.key_manager.has_available_key():
                 print("❌ Hết key, dừng.")
                 break
             
-            # Thu thập game_state cho các lỗi
             game_states_info = self._get_game_states_for_errors(video_path, actions, validation)
             
-            # Build correction prompt với game_state
             error_feedback = "\n".join(unfixable[:20])
             prompt = f"""
 Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
@@ -407,10 +333,8 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
 5. **TIMESTAMP FORMAT**: M:SS.mmm (phút:giây.miligiây, VD: 0:18.500)
 6. Trả về JSON array đã sửa
 """
-            # Reset blocked keys for retry
             self.key_manager.reset_blocked()
             
-            # Gọi tiếp trong cùng conversation
             new_actions = self._call_ai_chat(video_bytes, mime_type, prompt, is_first=False)
             
             if not new_actions:
@@ -418,23 +342,18 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 break
             
             actions = new_actions
-            
-            # Save each iteration
             raw_path = output_dir / f"raw_iter_{iteration}.json"
             self._save_json(actions, str(raw_path))
         
-        # Close auto fixer
         auto_fixer.close()
         
-        # Lọc chỉ giữ actions không error
         clean_actions = self._filter_valid_actions(actions, validation)
         print(f"\n📋 Clean actions: {len(clean_actions)}/{len(actions)}")
         
-        # Final result
         result = {
             "video": video_path,
             "timestamp": datetime.now().isoformat(),
-            "model": MODEL_NAME,
+            "model": GEMINI_MODEL_NAME,
             "iterations": iteration,
             "validation": {
                 "passed": validation["passed"],
@@ -443,14 +362,13 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 "errors_count": len(validation.get("errors", [])),
                 "warnings_count": len(validation.get("warnings", [])),
             },
-            "actions": clean_actions,  # Chỉ lưu actions sạch
-            "all_actions": actions,    # Lưu cả bản gốc để debug
+            "actions": clean_actions,
+            "all_actions": actions,
         }
         
         self._save_json(result, str(final_output))
         print(f"\n💾 Final: {final_output}")
         
-        # Nếu pass 100% → tự động build training data
         if validation["passed"] and validation["score"] >= 100:
             print("\n🎯 Building training data...")
             training_path = self._build_training_data(video_path, clean_actions, output_dir, str(training_output))
@@ -459,21 +377,15 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
         
         return result
     
-    def _build_training_data(self, video_path: str, actions: list, output_dir: Path, training_path: str) -> Optional[str]:
-        """
-        Tự động build training data từ actions đã validate
-        1. Dùng VideoDatasetBuilder để tạo dataset với game_state
-        2. Dùng dataset_to_training để convert sang format Gemma
-        """
+    def _build_training_data(self, video_path: str, actions: List, output_dir: Path, training_path: str) -> Optional[str]:
+        """Tự động build training data"""
         try:
-            from .video_dataset_builder import VideoDatasetBuilder
-            from .dataset_to_training import convert_dataset
+            from ..data.video_dataset_builder import VideoDatasetBuilder
+            from ..data.dataset_converter import convert_dataset
             
-            # Tạo file actions tạm
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             actions_file = output_dir / f"actions_temp_{timestamp}.json"
             
-            # Convert format cho VideoDatasetBuilder
             builder_actions = []
             for action in actions:
                 builder_actions.append({
@@ -484,7 +396,6 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
             
             self._save_json(builder_actions, str(actions_file))
             
-            # Build dataset (intermediate)
             dataset_path = output_dir / f"dataset_temp_{timestamp}.json"
             
             builder = VideoDatasetBuilder(video_path)
@@ -492,10 +403,8 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 builder.process_actions_file(str(actions_file), str(dataset_path), save_frames=False)
                 builder.close()
                 
-                # Convert sang format Gemma training
                 convert_dataset(str(dataset_path), training_path)
                 
-                # Xóa file tạm
                 actions_file.unlink()
                 dataset_path.unlink()
                 
@@ -507,8 +416,6 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
                 
         except Exception as e:
             print(f"❌ Error building training data: {e}")
-            import traceback
-            traceback.print_exc()
             return None
 
 
@@ -517,7 +424,7 @@ def main():
     parser = argparse.ArgumentParser(description="AI Video Labeler for PvZ")
     parser.add_argument("video", help="Path to video file")
     parser.add_argument("-o", "--output", help="Output JSON path")
-    parser.add_argument("-k", "--api-key", help="Gemini API key (optional, uses .env if not provided)")
+    parser.add_argument("-k", "--api-key", help="Gemini API key")
     args = parser.parse_args()
     
     labeler = AIVideoLabeler(api_key=args.api_key)

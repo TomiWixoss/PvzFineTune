@@ -24,11 +24,3 @@ yt-dlp
 # AI Video Labeling (Gemini)
 google-genai
 python-dotenv
-
-# Training (Colab - optional)
-# torch
-# datasets
-# trl
-# accelerate
-# roboflow
-# ultralytics

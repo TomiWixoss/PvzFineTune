@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 FunctionGemma inference for PvZ bot decisions - OpenVINO version
+GIỮ NGUYÊN LOGIC 100% - KHÔNG SỬA
 """
 
 import re
-import sys
-import os
+from typing import Tuple, Dict, Any, List
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import GEMMA_MODEL_PATH
+from ..core.config import Config
 
 try:
     from optimum.intel import OVModelForCausalLM
@@ -23,7 +22,7 @@ class GemmaInference:
     """FunctionGemma model for game action decisions - OpenVINO"""
     
     def __init__(self, model_path: str = None):
-        self.model_path = model_path or GEMMA_MODEL_PATH
+        self.model_path = model_path or str(Config.GEMMA_MODEL_PATH)
         self.model = None
         self.tokenizer = None
         self.tools = None
@@ -75,7 +74,7 @@ Plant when seed ready. Wait when cooldown."""
         
         self.tools = [get_json_schema(plant), get_json_schema(wait)]
     
-    def _parse_function_call(self, output: str):
+    def _parse_function_call(self, output: str) -> Tuple[str, Dict[str, Any]]:
         """Parse function call from model output"""
         # Format: call:plant{col:2,plant_type:<escape>pea_shooter<escape>,row:2}
         match = re.search(r"call:(\w+)\{([^}]*)\}", output)
@@ -101,7 +100,7 @@ Plant when seed ready. Wait when cooldown."""
         
         return name, args
     
-    def get_action(self, game_state: str):
+    def get_action(self, game_state: str) -> Tuple[str, Dict[str, Any]]:
         """Get action from game state"""
         messages = [
             {"role": "developer", "content": self.system_msg},
@@ -129,7 +128,7 @@ Plant when seed ready. Wait when cooldown."""
         return self._parse_function_call(output)
     
     @staticmethod
-    def create_game_state(plants: list, zombies: list, seeds: list) -> str:
+    def create_game_state(plants: List[Dict], zombies: List[Dict], seeds: List[Dict]) -> str:
         """
         Create game state string from detection results
         

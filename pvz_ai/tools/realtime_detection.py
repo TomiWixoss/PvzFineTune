@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Realtime PvZ detection using YOLO + OpenVINO
+Realtime Detection - Detection từ game window
 """
 
 import cv2
 import time
-import sys
-import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import YOLO_MODEL_PATH
-from utils.window_capture import PvZWindowCapture
-from inference.yolo_detector import YOLODetector
+from ..core.config import Config
+from ..utils.window_capture import WindowCapture
+from ..inference.yolo_detector import YOLODetector
 
 
-class PvZRealtimeDetection:
+class RealtimeDetection:
+    """Realtime detection từ game window"""
+    
     def __init__(self, model_path: str = None):
-        self.detector = YOLODetector(model_path or YOLO_MODEL_PATH)
-        self.window_capture = PvZWindowCapture()
+        self.detector = YOLODetector(model_path)
+        self.window = WindowCapture()
     
     def start(self):
-        """Start realtime detection"""
         print("=" * 60)
         print("PVZ REALTIME DETECTION - YOLO11 + OpenVINO")
         print("=" * 60)
@@ -28,14 +26,11 @@ class PvZRealtimeDetection:
         if not self.detector.load():
             return
         
-        if not self.window_capture.find_window():
-            print("\nPlease:")
-            print("1. Open Plants vs Zombies")
-            print("2. Run this script again")
+        if not self.window.find_window():
+            print("\nPlease open Plants vs Zombies first!")
             return
         
-        print("\n✓ Starting realtime detection!")
-        print("Press 'q' on display window to quit\n")
+        print("\n✓ Starting! Press 'q' to quit\n")
         
         fps_time = time.time()
         fps_counter = 0
@@ -43,17 +38,13 @@ class PvZRealtimeDetection:
         
         try:
             while True:
-                frame = self.window_capture.capture()
+                frame = self.window.capture()
                 if frame is None:
                     continue
                 
-                # Detect
                 detections = self.detector.detect(frame)
-                
-                # Draw
                 frame = self.detector.draw_detections(frame, detections)
                 
-                # FPS
                 fps_counter += 1
                 if time.time() - fps_time > 1:
                     fps = fps_counter
@@ -69,7 +60,7 @@ class PvZRealtimeDetection:
                     break
                     
         except KeyboardInterrupt:
-            print("\n\nStopped!")
+            print("\nStopped!")
         finally:
             cv2.destroyAllWindows()
 
@@ -80,7 +71,7 @@ def main():
     parser.add_argument('-m', '--model', help='YOLO model path')
     args = parser.parse_args()
     
-    detector = PvZRealtimeDetection(model_path=args.model)
+    detector = RealtimeDetection(model_path=args.model)
     detector.start()
 
 
