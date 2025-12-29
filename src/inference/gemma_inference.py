@@ -129,9 +129,7 @@ class GemmaInference:
             out = self.model.generate(
                 **inputs, 
                 pad_token_id=self.tokenizer.eos_token_id, 
-                max_new_tokens=32,  # Giảm từ 64 xuống 32 (đủ cho function call)
-                do_sample=False,    # Greedy decoding - nhanh hơn
-                use_cache=True      # Enable KV cache
+                max_new_tokens=64
             )
         
         output = self.tokenizer.decode(
