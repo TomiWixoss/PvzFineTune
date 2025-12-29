@@ -1,0 +1,339 @@
+{
+  "video": "pvz_level1.mp4",
+  "created": "2025-12-29 11:50:23",
+  "video_info": {
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": "01:11.000",
+    "total_frames": 4260
+  },
+  "total_samples": 8,
+  "samples": [
+    {
+      "id": 1,
+      "timestamp": "00:08.199",
+      "frame_number": 491,
+      "game_state": {
+        "text": "PLANTS:[]. ZOMBIES:[]. SEEDS:[]",
+        "plants": [],
+        "zombies": [],
+        "seeds": []
+      },
+      "action": {
+        "type": "wait",
+        "args": {}
+      },
+      "frame_path": "frames/00_08_199.png"
+    },
+    {
+      "id": 2,
+      "timestamp": "00:09.000",
+      "frame_number": 540,
+      "game_state": {
+        "text": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+        "plants": [],
+        "zombies": [],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "ready",
+            "x": 287,
+            "y": 76,
+            "conf": 0.98859703540802
+          }
+        ]
+      },
+      "action": {
+        "type": "plant",
+        "args": {
+          "plant_type": "pea_shooter",
+          "row": 2,
+          "col": 0
+        }
+      },
+      "frame_path": "frames/00_09_000.png"
+    },
+    {
+      "id": 3,
+      "timestamp": "00:15.000",
+      "frame_number": 900,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+        "plants": [
+          {
+            "x": 201,
+            "y": 579,
+            "conf": 0.9596053957939148,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "cooldown",
+            "x": 287,
+            "y": 77,
+            "conf": 0.9381699562072754
+          }
+        ]
+      },
+      "action": {
+        "type": "wait",
+        "args": {}
+      },
+      "frame_path": "frames/00_15_000.png"
+    },
+    {
+      "id": 4,
+      "timestamp": "00:18.600",
+      "frame_number": 1116,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+        "plants": [
+          {
+            "x": 202,
+            "y": 580,
+            "conf": 0.9612635374069214,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "ready",
+            "x": 299,
+            "y": 75,
+            "conf": 0.795610785484314
+          }
+        ]
+      },
+      "action": {
+        "type": "plant",
+        "args": {
+          "plant_type": "pea_shooter",
+          "row": 2,
+          "col": 1
+        }
+      },
+      "frame_path": "frames/00_18_600.png"
+    },
+    {
+      "id": 5,
+      "timestamp": "00:30.000",
+      "frame_number": 1800,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+        "plants": [
+          {
+            "x": 407,
+            "y": 580,
+            "conf": 0.9676141142845154,
+            "row": 2,
+            "col": 1,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 201,
+            "y": 577,
+            "conf": 0.9386972188949585,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [
+          {
+            "x": 1791,
+            "y": 554,
+            "conf": 0.9563868045806885,
+            "row": 2,
+            "col": 8,
+            "type": "zombie"
+          }
+        ],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "cooldown",
+            "x": 287,
+            "y": 77,
+            "conf": 0.9362673759460449
+          }
+        ]
+      },
+      "action": {
+        "type": "wait",
+        "args": {}
+      },
+      "frame_path": "frames/00_30_000.png"
+    },
+    {
+      "id": 6,
+      "timestamp": "00:41.899",
+      "frame_number": 2514,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,1,8)]. SEEDS:[(pea_shooter,ready)]",
+        "plants": [
+          {
+            "x": 393,
+            "y": 577,
+            "conf": 0.9528287649154663,
+            "row": 2,
+            "col": 1,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 194,
+            "y": 583,
+            "conf": 0.9430180191993713,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [
+          {
+            "x": 1910,
+            "y": 471,
+            "conf": 0.7524320483207703,
+            "row": 1,
+            "col": 8,
+            "type": "zombie"
+          }
+        ],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "ready",
+            "x": 287,
+            "y": 76,
+            "conf": 0.9935304522514343
+          }
+        ]
+      },
+      "action": {
+        "type": "plant",
+        "args": {
+          "plant_type": "pea_shooter",
+          "row": 2,
+          "col": 2
+        }
+      },
+      "frame_path": "frames/00_41_899.png"
+    },
+    {
+      "id": 7,
+      "timestamp": "00:50.000",
+      "frame_number": 3000,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,2),(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+        "plants": [
+          {
+            "x": 591,
+            "y": 580,
+            "conf": 0.9702357649803162,
+            "row": 2,
+            "col": 2,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 195,
+            "y": 582,
+            "conf": 0.9511983394622803,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 388,
+            "y": 578,
+            "conf": 0.9446661472320557,
+            "row": 2,
+            "col": 1,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "cooldown",
+            "x": 287,
+            "y": 77,
+            "conf": 0.9344679713249207
+          }
+        ]
+      },
+      "action": {
+        "type": "wait",
+        "args": {}
+      },
+      "frame_path": "frames/00_50_000.png"
+    },
+    {
+      "id": 8,
+      "timestamp": "01:00.000",
+      "frame_number": 3600,
+      "game_state": {
+        "text": "PLANTS:[(pea_shooter,2,2),(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+        "plants": [
+          {
+            "x": 588,
+            "y": 580,
+            "conf": 0.968579888343811,
+            "row": 2,
+            "col": 2,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 398,
+            "y": 578,
+            "conf": 0.953623354434967,
+            "row": 2,
+            "col": 1,
+            "type": "pea_shooter"
+          },
+          {
+            "x": 197,
+            "y": 576,
+            "conf": 0.9305670261383057,
+            "row": 2,
+            "col": 0,
+            "type": "pea_shooter"
+          }
+        ],
+        "zombies": [
+          {
+            "x": 1732,
+            "y": 557,
+            "conf": 0.9429405331611633,
+            "row": 2,
+            "col": 8,
+            "type": "zombie"
+          }
+        ],
+        "seeds": [
+          {
+            "type": "pea_shooter",
+            "status": "cooldown",
+            "x": 287,
+            "y": 77,
+            "conf": 0.9347212910652161
+          }
+        ]
+      },
+      "action": {
+        "type": "wait",
+        "args": {}
+      },
+      "frame_path": "frames/01_00_000.png"
+    }
+  ]
+}

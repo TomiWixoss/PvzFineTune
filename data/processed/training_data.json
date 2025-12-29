@@ -1,140 +1,54 @@
 [
   {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=3. CANNOT_PLANT",
-    "action": "do_nothing",
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[]",
+    "action": "wait",
     "arguments": {}
   },
   {
-    "game_state": "NO_SUN. NO_ZOMBIE. CAN_PLANT",
-    "action": "plant_pea_shooter",
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
     "arguments": {
+      "plant_type": "pea_shooter",
       "row": 2,
       "col": 0
     }
   },
   {
-    "game_state": "HAS_SUN x=524 y=169. NO_ZOMBIE. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 524,
-      "y": 169
-    }
-  },
-  {
-    "game_state": "NO_SUN. NO_ZOMBIE. CANNOT_PLANT",
-    "action": "do_nothing",
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
     "arguments": {}
   },
   {
-    "game_state": "HAS_SUN x=1515 y=169. NO_ZOMBIE. CANNOT_PLANT",
-    "action": "collect_sun",
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
     "arguments": {
-      "x": 1515,
-      "y": 169
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
     }
   },
   {
-    "game_state": "HAS_SUN x=585 y=171. NO_ZOMBIE. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 585,
-      "y": 171
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
+    "game_state": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
     "arguments": {}
   },
   {
-    "game_state": "HAS_SUN x=1363 y=169. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
+    "game_state": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,1,8)]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
     "arguments": {
-      "x": 1363,
-      "y": 169
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
-    "arguments": {}
-  },
-  {
-    "game_state": "HAS_SUN x=854 y=215. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 854,
-      "y": 215
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
-    "arguments": {}
-  },
-  {
-    "game_state": "HAS_SUN x=959 y=165. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 959,
-      "y": 165
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=1. CAN_PLANT",
-    "action": "plant_pea_shooter",
-    "arguments": {
+      "plant_type": "pea_shooter",
       "row": 2,
       "col": 2
     }
   },
   {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
+    "game_state": "PLANTS:[(pea_shooter,2,2),(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
     "arguments": {}
   },
   {
-    "game_state": "HAS_SUN x=554 y=198. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 554,
-      "y": 198
-    }
-  },
-  {
-    "game_state": "NO_SUN. NO_ZOMBIE. CANNOT_PLANT",
-    "action": "do_nothing",
-    "arguments": {}
-  },
-  {
-    "game_state": "HAS_SUN x=281 y=119. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 281,
-      "y": 119
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
-    "arguments": {}
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
-    "arguments": {}
-  },
-  {
-    "game_state": "HAS_SUN x=1326 y=199. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "collect_sun",
-    "arguments": {
-      "x": 1326,
-      "y": 199
-    }
-  },
-  {
-    "game_state": "NO_SUN. HAS_ZOMBIE row=2. CANNOT_PLANT",
-    "action": "do_nothing",
+    "game_state": "PLANTS:[(pea_shooter,2,2),(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
     "arguments": {}
   }
 ]
