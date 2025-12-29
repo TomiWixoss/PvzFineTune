@@ -162,7 +162,7 @@ def validate_actions_with_video(
     score = (passed_count / total * 100) if total > 0 else 0
     
     return {
-        "passed": score >= 90,
+        "passed": score >= 100,  # Phải 100% vì có auto-fix
         "score": score,
         "total": total,
         "errors": errors,
@@ -236,7 +236,7 @@ def validate_actions_simple(actions: list[dict[str, Any]]) -> dict:
     score = ((total - error_count) / total * 100) if total > 0 else 0
     
     return {
-        "passed": score >= 90,
+        "passed": score >= 100,  # Phải 100% vì có auto-fix
         "score": score,
         "total": total,
         "errors": errors,

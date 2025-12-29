@@ -250,11 +250,20 @@ class AIVideoLabeler:
         # Reset chat history cho video mới
         self.reset_chat()
         
-        # Setup output
+        # Setup output - gom vào data/ai_labeler/<video_name>/
+        video_name = Path(video_path).stem
+        timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
         if output_path is None:
-            output_path = f"data/ai_labeled_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        output_dir = Path(output_path).parent
+            output_dir = Path(f"data/ai_labeler/{video_name}")
+        else:
+            output_dir = Path(output_path).parent
+        
         output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Final output paths
+        final_output = output_dir / f"result_{timestamp_str}.json"
+        training_output = output_dir / f"training_data_{timestamp_str}.json"
         
         # Load video once
         video_bytes, mime_type = self._load_video(video_path)
@@ -384,10 +393,59 @@ Kết quả validation KHÔNG ĐẠT (score: {validation['score']:.1f}%).
             "all_actions": actions,    # Lưu cả bản gốc để debug
         }
         
-        self._save_json(result, output_path)
-        print(f"\n💾 Final: {output_path}")
+        self._save_json(result, str(final_output))
+        print(f"\n💾 Final: {final_output}")
+        
+        # Nếu pass 100% → tự động build training data
+        if validation["passed"] and validation["score"] >= 100:
+            print("\n🎯 Building training data...")
+            training_path = self._build_training_data(video_path, clean_actions, output_dir, str(training_output))
+            if training_path:
+                result["training_data"] = training_path
         
         return result
+    
+    def _build_training_data(self, video_path: str, actions: list, output_dir: Path, training_path: str) -> Optional[str]:
+        """
+        Tự động build training data từ actions đã validate
+        Sử dụng VideoDatasetBuilder để tạo game_state + action pairs
+        """
+        try:
+            from .video_dataset_builder import VideoDatasetBuilder
+            
+            # Tạo file actions tạm
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            actions_file = output_dir / f"actions_temp_{timestamp}.json"
+            
+            # Convert format cho VideoDatasetBuilder
+            builder_actions = []
+            for action in actions:
+                builder_actions.append({
+                    "time": action.get("time", "0:00"),
+                    "action": action.get("action", "wait"),
+                    "args": action.get("args", {})
+                })
+            
+            self._save_json(builder_actions, str(actions_file))
+            
+            # Build training data
+            builder = VideoDatasetBuilder(video_path)
+            if builder.load():
+                builder.process_actions_file(str(actions_file), training_path, save_frames=False)
+                builder.close()
+                
+                # Xóa file tạm
+                actions_file.unlink()
+                
+                print(f"✅ Training data: {training_path}")
+                return training_path
+            else:
+                print("❌ Cannot load video for training data")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Error building training data: {e}")
+            return None
 
 
 def main():

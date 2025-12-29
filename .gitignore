@@ -21,6 +21,11 @@ build/
 # Data (large files)
 data/raw/
 
+# AI Labeler temp files (keep only training_data)
+data/ai_labeler/raw_*.json
+data/ai_labeler/fixed_*.json
+data/ai_labeler/actions_temp_*.json
+
 # Keep structure
 !data/.gitkeep
 !models/.gitkeep
