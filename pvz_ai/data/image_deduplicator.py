@@ -37,11 +37,11 @@ def find_duplicates(
     """
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
     
-    # Lấy tất cả ảnh
+    # Lấy tất cả ảnh - dùng case-insensitive matching
     images = []
-    for ext in image_extensions:
-        images.extend(Path(input_dir).glob(f'*{ext}'))
-        images.extend(Path(input_dir).glob(f'*{ext.upper()}'))
+    for f in Path(input_dir).iterdir():
+        if f.suffix.lower() in image_extensions:
+            images.append(f)
     
     images = sorted(images)
     print(f"Tìm thấy {len(images)} ảnh")
@@ -108,9 +108,9 @@ def deduplicate(
     
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
     all_images = []
-    for ext in image_extensions:
-        all_images.extend(Path(input_dir).glob(f'*{ext}'))
-        all_images.extend(Path(input_dir).glob(f'*{ext.upper()}'))
+    for f in Path(input_dir).iterdir():
+        if f.suffix.lower() in image_extensions:
+            all_images.append(f)
     
     unique_images = [str(img) for img in all_images if str(img) not in all_duplicates]
     
@@ -148,9 +148,9 @@ def deduplicate_sequential(
     
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
     images = []
-    for ext in image_extensions:
-        images.extend(Path(input_dir).glob(f'*{ext}'))
-        images.extend(Path(input_dir).glob(f'*{ext.upper()}'))
+    for f in Path(input_dir).iterdir():
+        if f.suffix.lower() in image_extensions:
+            images.append(f)
     
     images = sorted(images)  # Sort theo tên để giữ thứ tự
     print(f"Tìm thấy {len(images)} ảnh")
