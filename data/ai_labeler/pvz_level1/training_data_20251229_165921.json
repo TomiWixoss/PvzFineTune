@@ -1,0 +1,44 @@
+[
+  {
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,1),(pea_shooter,2,0)]. ZOMBIES:[(zombie,1,8)]. SEEDS:[(pea_shooter,ready)]",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1),(pea_shooter,2,2)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+    "action": "wait",
+    "arguments": {}
+  }
+]

@@ -7,14 +7,14 @@
       "row": 2,
       "col": 0
     },
-    "note": "Planting first Peashooter in the middle lane.",
-    "_fixed_from": "0:09.375"
+    "note": "Planting the first Pea Shooter to defend the middle row.",
+    "_fixed_from": "0:09.417"
   },
   {
-    "time": "0:12.000",
+    "time": "0:14.250",
     "action": "wait",
     "args": {},
-    "note": "Waiting for enough sun to plant the next Peashooter."
+    "note": "Waiting for sun to fall and seed cooldown."
   },
   {
     "time": "0:18.788",
@@ -24,46 +24,30 @@
       "row": 2,
       "col": 1
     },
-    "note": "Planting second Peashooter.",
+    "note": "Planting second Pea Shooter for increased firepower.",
     "_fixed_from": "0:19.167"
   },
   {
-    "time": "0:22.000",
+    "time": "0:31.250",
     "action": "wait",
     "args": {},
-    "note": "Waiting for seed cooldown and sun."
+    "note": "Waiting for more sun to plant another attacker."
   },
   {
-    "time": "0:31.250",
+    "time": "0:41.954",
     "action": "plant",
     "args": {
       "plant_type": "pea_shooter",
       "row": 2,
       "col": 2
     },
-    "note": "Planting third Peashooter."
+    "note": "Planting third Pea Shooter.",
+    "_fixed_from": "0:42.333"
   },
   {
-    "time": "0:35.000",
+    "time": "0:55.500",
     "action": "wait",
     "args": {},
-    "note": "Waiting for seed cooldown."
-  },
-  {
-    "time": "0:41.955",
-    "action": "plant",
-    "args": {
-      "plant_type": "pea_shooter",
-      "row": 2,
-      "col": 3
-    },
-    "note": "Planting fourth Peashooter.",
-    "_fixed_from": "0:42.208"
-  },
-  {
-    "time": "0:45.000",
-    "action": "wait",
-    "args": {},
-    "note": "Waiting for the level to finish as waves are defeated."
+    "note": "No more plants needed for this level, finishing off the remaining zombies."
   }
 ]
