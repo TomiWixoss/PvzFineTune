@@ -26,6 +26,9 @@ data/ai_labeler/raw_*.json
 data/ai_labeler/fixed_*.json
 data/ai_labeler/actions_temp_*.json
 
+# YOLO frame selector output
+data/yolo_frames/
+
 # Keep structure
 !data/.gitkeep
 !models/.gitkeep
