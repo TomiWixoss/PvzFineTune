@@ -1,0 +1,96 @@
+[
+  {
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "thinking": "Start of the level. Plant a sunflower in the first available row to start generating sun.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "thinking": "Sunflower is on cooldown. Waiting for it to be ready again.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "thinking": "Sunflower seed is ready. Plant another one in row 2 to increase sun production.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown),(sunflower,cooldown)]",
+    "thinking": "Sunflowers are on cooldown and sun is low. Waiting to build up resources.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "Sufficient sun and seed ready. Plant a third sunflower in row 3 to complete the first column of economy.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 3,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "Economy is growing. No zombies have appeared yet. Waiting for more sun to plant defense.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "A zombie has appeared in row 2. Plant a pea_shooter there for immediate defense.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,7)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "thinking": "Row 2 is defended. Waiting for sunflower cooldown to continue expanding economy.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,6)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "thinking": "Continuing to build economy by planting another sunflower in row 1.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0),(pea_shooter,2,1),(sunflower,1,1)]. ZOMBIES:[(zombie,2,5)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "Planting another sunflower in row 3 to maximize sun generation while the first zombie is being handled.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 3,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,2,0),(sunflower,3,0),(pea_shooter,2,1),(sunflower,1,1),(sunflower,3,1)]. ZOMBIES:[(zombie,1,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "A new zombie has appeared in row 1. Plant a pea_shooter there to secure the lane.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 2
+    }
+  }
+]

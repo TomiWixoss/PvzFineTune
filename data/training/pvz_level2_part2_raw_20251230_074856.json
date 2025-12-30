@@ -1,0 +1,64 @@
+[
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2)]. ZOMBIES:[(zombie,3,6)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "Row 3 already has a pea_shooter defending against the lone zombie. I will wait to see where the next zombie appears before spending sun.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2)]. ZOMBIES:[(zombie,3,5),(zombie,1,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "A new zombie is appearing in row 1. I have enough sun for a pea_shooter. Planting it in row 1 to establish defense.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 1,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2),(pea_shooter,1,3)]. ZOMBIES:[(zombie,1,6)]. SEEDS:[(pea_shooter,cooldown),(sunflower,ready)]",
+    "thinking": "The pea_shooter is on cooldown. I need to wait until it's ready to place more defenses.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2),(pea_shooter,1,3)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "A zombie is entering in row 2. No defense in that row yet. Planting a pea_shooter in row 2 to stop it.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2),(pea_shooter,1,3),(pea_shooter,2,3)]. ZOMBIES:[(zombie,0,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "A zombie is approaching in the top row. Planting a pea_shooter in row 0 to cover the defense for that lane.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 0,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2),(pea_shooter,1,3),(pea_shooter,2,3),(pea_shooter,0,3)]. ZOMBIES:[(zombie,4,8)]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "Zombie detected in the bottom row. Planting a pea_shooter in row 4 to protect this final lane.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 4,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(sunflower,1,0),(sunflower,1,1),(sunflower,1,2),(sunflower,2,0),(sunflower,2,1),(sunflower,2,2),(pea_shooter,3,2),(pea_shooter,1,3),(pea_shooter,2,3),(pea_shooter,0,3),(pea_shooter,4,3)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready),(sunflower,ready)]",
+    "thinking": "All rows are currently defended by at least one pea_shooter. Planting another sunflower in row 0 to boost my sun production.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "sunflower",
+      "row": 0,
+      "col": 2
+    }
+  }
+]

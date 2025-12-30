@@ -26,11 +26,11 @@ class GemmaInference:
         self.model = None
         self.tokenizer = None
         self.tools = None
-        self.system_msg = """PvZ bot. Choose action based on game state.
+        # System message đơn giản - AI học logic từ thinking trong training data
+        self.system_msg = """PvZ bot. Analyze game state and choose action.
 - PLANTS: planted plants (type,row,col)
 - ZOMBIES: zombies (type,row,col)
-- SEEDS: seed packets (type,status)
-Plant when seed ready. Wait when cooldown."""
+- SEEDS: seed packets (type,status)"""
     
     def load(self) -> bool:
         """Load OpenVINO model"""
@@ -75,8 +75,11 @@ Plant when seed ready. Wait when cooldown."""
         self.tools = [get_json_schema(plant), get_json_schema(wait)]
     
     def _parse_function_call(self, output: str) -> Tuple[str, Dict[str, Any]]:
-        """Parse function call from model output"""
-        # Format: call:plant{col:2,plant_type:<escape>pea_shooter<escape>,row:2}
+        """Parse function call from model output (skip thinking block)"""
+        # Format: <think>...</think>call:plant{col:2,plant_type:<escape>pea_shooter<escape>,row:2}
+        # Remove thinking block first
+        output = re.sub(r'<think>.*?</think>', '', output, flags=re.DOTALL)
+        
         match = re.search(r"call:(\w+)\{([^}]*)\}", output)
         if not match:
             return None, {}
@@ -115,10 +118,14 @@ Plant when seed ready. Wait when cooldown."""
             return_tensors="pt"
         )
         
+        # Inference settings theo Unsloth docs
         out = self.model.generate(
             **inputs, 
             pad_token_id=self.tokenizer.eos_token_id, 
-            max_new_tokens=64
+            max_new_tokens=128,  # Tăng để có chỗ cho thinking
+            top_k=64,            # Theo Unsloth recommend
+            top_p=0.95,          # Theo Unsloth recommend
+            temperature=1.0      # Theo Unsloth recommend
         )
         
         output = self.tokenizer.decode(

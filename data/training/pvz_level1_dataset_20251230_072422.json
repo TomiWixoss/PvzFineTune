@@ -1,0 +1,66 @@
+[
+  {
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "Level start. The garden is empty. Planting a pea_shooter at row 2 col 0 to establish a basic defense.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+    "thinking": "First plant placed. No zombies visible yet. Waiting for the pea_shooter seed to recharge.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "Defense needs strengthening even before enemies arrive. Planting a second pea_shooter in the active row.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,cooldown)]",
+    "thinking": "First zombie spotted at row 2. I have two shooters active. Waiting for seed cooldown to finish.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,7)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "The zombie is slowly approaching. Adding a third pea_shooter at (2,2) to increase DPS.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1),(pea_shooter,2,2)]. ZOMBIES:[(zombie,2,6)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "More firepower is needed to ensure the zombie doesn't reach the house. Planting a fourth pea_shooter.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1),(pea_shooter,2,2),(pea_shooter,2,3)]. ZOMBIES:[(zombie,2,5)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "The current line of four pea_shooters is sufficient for the first wave. Waiting and observing.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1),(pea_shooter,2,2),(pea_shooter,2,3)]. ZOMBIES:[(zombie,2,8),(zombie,2,7)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "Final wave incoming. Multiple zombies are in row 2, but the current defense is powerful enough. No more planting needed.",
+    "action": "wait",
+    "arguments": {}
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "game_state": "PLANTS:[]. ZOMBIES:[]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "Level starts. Row 2 is the only path. Plant pea_shooter at (2,0) for initial defense.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[]. SEEDS:[(pea_shooter,cooldown)]",
+    "thinking": "One pea_shooter planted. Seed is on cooldown. Wait for more sun and cooldown to reset.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "First zombie spotted at (2,8). Pea_shooter is ready. Plant another one at (2,1) to boost firepower.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,7)]. SEEDS:[(pea_shooter,cooldown)]",
+    "thinking": "Zombie is being hit by two pea_shooters. Seed is on cooldown. No action needed for now.",
+    "action": "wait",
+    "arguments": {}
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1)]. ZOMBIES:[(zombie,2,8)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "New zombie approaching. Plant a third pea_shooter at (2,2) to further strengthen the defense in row 2.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "game_state": "PLANTS:[(pea_shooter,2,0),(pea_shooter,2,1),(pea_shooter,2,2)]. ZOMBIES:[(zombie,2,6)]. SEEDS:[(pea_shooter,ready)]",
+    "thinking": "Row 2 defense is solid. Plant a fourth pea_shooter at (2,3) to clear incoming zombies even faster.",
+    "action": "plant",
+    "arguments": {
+      "plant_type": "pea_shooter",
+      "row": 2,
+      "col": 3
+    }
+  }
+]
